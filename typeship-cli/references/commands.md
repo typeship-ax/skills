@@ -10,11 +10,11 @@ POST /generate: Generate a package from a spec
 
 | flag | type | required | description |
 | --- | --- | --- | --- |
-| `--spec` | json | yes | The spec to generate from. Provide exactly one of url or inline. |
-| `--platforms` | json |  | Artifacts to generate from the spec. Defaults to [sdk]. |
-| `--language` | string |  | Language to generate. Python and Go produce the SDK only; the CLI and MCP server are TypeScript artifacts and are skipped with a warning when requested alongside them. |
+| `--spec` | object | yes | The spec to generate from. Provide exactly one of url or inline. |
+| `--platforms` | sdk\|cli\|mcp[] |  | Artifacts to generate from the spec. Defaults to [sdk]. |
+| `--language` | typescript\|python\|go |  | Language to generate. Python and Go produce the SDK only; the CLI and MCP server are TypeScript artifacts and are skipped with a warning when requested alongside them. |
 | `--package-name` | string |  | npm name override for the generated package. |
-| `--config` | json |  | Everything typeship needs beyond the spec, in one object: generation customization (globals, retries, pagination) and how the generated tooling behaves (cli, mcp, docs_url). Plain configuration. typeship never requires vendor extensions inside the spec itself. The same shape is accepted on a project and on POST /generate. |
+| `--config` | object |  | Everything typeship needs beyond the spec, in one object: generation customization (globals, retries, pagination) and how the generated tooling behaves (cli, mcp, docs_url). Plain configuration. typeship never requires vendor extensions inside the spec itself. The same shape is accepted on a project and on POST /generate. |
 
 ## projects
 
@@ -35,15 +35,15 @@ POST /projects: Create a project
 | --- | --- | --- | --- |
 | `--name` | string | yes |  |
 | `--spec-url` | string |  | Spec location for a URL-sourced project. Provide this or source; a project with neither has nothing to generate. |
-| `--source` | json |  | Where the project's spec lives. |
-| `--platforms` | json |  | Artifacts to build. sdk is implied; cli and mcp require typescript among the languages. Free projects run one platform in total (one SDK language); more is a 402 until the account is on Pro. |
-| `--languages` | json |  | Languages to generate. Each is a separate package, a separate pull request, a separate hosted generation, and one platform for billing. Defaults to typescript alone. |
-| `--destinations` | json |  | Per-language pull-request destination, keyed by language. |
-| `--package-names` | json |  | Registry name per language; unset derives from the API title. |
+| `--source` | object |  | Where the project's spec lives. |
+| `--platforms` | sdk\|cli\|mcp[] |  | Artifacts to build. sdk is implied; cli and mcp require typescript among the languages. Free projects run one platform in total (one SDK language); more is a 402 until the account is on Pro. |
+| `--languages` | typescript\|python\|go[] |  | Languages to generate. Each is a separate package, a separate pull request, a separate hosted generation, and one platform for billing. Defaults to typescript alone. |
+| `--destinations` | object |  | Per-language pull-request destination, keyed by language. |
+| `--package-names` | object |  | Registry name per language; unset derives from the API title. |
 | `--destination` | json |  |  |
 | `--auto-regen` | boolean |  |  |
 | `--package-name` | string |  |  |
-| `--spec-patches` | json |  |  |
+| `--spec-patches` | object[] |  |  |
 | `--mcp-enabled` | boolean |  | Requires the mcp platform and Pro. |
 | `--relay-enabled` | boolean |  | Requires the cli platform and Pro. |
 | `--config` | json |  |  |
@@ -64,15 +64,15 @@ PATCH /projects/{project_id}: Update a project
 | --- | --- | --- | --- |
 | `--name` | string |  |  |
 | `--spec-url` | string |  |  |
-| `--source` | json |  | Where the project's spec lives. |
-| `--platforms` | json |  | Artifacts to build; replaces the list. Dropping cli or mcp turns off the hosted feature it serves. cli and mcp require typescript among the languages. Turning a platform off stops generating it; nothing already delivered is removed. |
+| `--source` | object |  | Where the project's spec lives. |
+| `--platforms` | sdk\|cli\|mcp[] |  | Artifacts to build; replaces the list. Dropping cli or mcp turns off the hosted feature it serves. cli and mcp require typescript among the languages. Turning a platform off stops generating it; nothing already delivered is removed. |
 | `--destination` | json |  |  |
-| `--languages` | json |  | Languages to generate; replaces the list. Each is its own hosted generation and one platform for billing. |
-| `--destinations` | json |  | Per-language pull-request destination, keyed by language. |
-| `--package-names` | json |  | Registry name per language; unset derives from the API title. |
+| `--languages` | typescript\|python\|go[] |  | Languages to generate; replaces the list. Each is its own hosted generation and one platform for billing. |
+| `--destinations` | object |  | Per-language pull-request destination, keyed by language. |
+| `--package-names` | object |  | Registry name per language; unset derives from the API title. |
 | `--auto-regen` | boolean |  |  |
 | `--package-name` | string |  |  |
-| `--spec-patches` | json |  |  |
+| `--spec-patches` | object[] |  |  |
 | `--mcp-enabled` | boolean |  | Serve this project as a hosted remote MCP endpoint. Requires the mcp platform and Pro. |
 | `--relay-enabled` | boolean |  | Enable the webhook relay so the generated CLI's webhooks listen command works for this API's users. Requires the cli platform and Pro. |
 | `--config` | json |  | Replaces the whole config. Pass null to clear it. |
@@ -85,7 +85,7 @@ GET /projects/{project_id}/generations: List a project's generations
 | --- | --- | --- | --- |
 | `--limit` | number |  |  |
 | `--cursor` | string |  |  |
-| `--language` | string |  | Only generations for this language. |
+| `--language` | typescript\|python\|go |  | Only generations for this language. |
 
 ### typeship projects generate <project_id>
 
