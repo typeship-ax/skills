@@ -12,7 +12,7 @@ POST /generate: Generate a package from a spec
 | --- | --- | --- | --- |
 | `--spec` | object | yes | The spec to generate from. Provide exactly one of url or inline. |
 | `--platforms` | sdk\|cli\|mcp[] |  | Artifacts to generate from the spec. Defaults to [sdk]. |
-| `--language` | typescript\|python\|go |  | Language to generate. Python and Go produce the SDK only; the CLI and MCP server are TypeScript artifacts and are skipped with a warning when requested alongside them. |
+| `--language` | typescript\|python\|go |  | Language to generate. Python and Go produce the SDK only; the CLI and MCP server are TypeScript artifacts and are skipped with a warning when requested alongside them. Default: "typescript". |
 | `--package-name` | string |  | npm name override for the generated package. |
 | `--config` | object |  | Everything typeship needs beyond the spec, in one object: generation customization (globals, retries, pagination) and how the generated tooling behaves (cli, mcp, docs_url). Plain configuration. typeship never requires vendor extensions inside the spec itself. The same shape is accepted on a project and on POST /generate. |
 
@@ -97,7 +97,7 @@ GET /projects/{project_id}/mcp_usage: Retrieve hosted MCP endpoint usage for a p
 
 | flag | type | required | description |
 | --- | --- | --- | --- |
-| `--days` | number |  | Window in days, 1 to 90. |
+| `--days` | number |  | Window in days, 1 to 90. Default: 30. |
 
 ## generations
 
