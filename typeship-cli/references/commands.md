@@ -24,8 +24,8 @@ GET /projects: List projects
 
 | flag | type | required | description |
 | --- | --- | --- | --- |
-| `--limit` | number |  |  |
-| `--cursor` | string |  |  |
+| `--limit` | number |  | Items per page. |
+| `--cursor` | string |  | Cursor of the page to fetch, from the previous page's nextPage. |
 
 ### typeship projects create
 
@@ -83,8 +83,8 @@ GET /projects/{project_id}/generations: List a project's generations
 
 | flag | type | required | description |
 | --- | --- | --- | --- |
-| `--limit` | number |  |  |
-| `--cursor` | string |  |  |
+| `--limit` | number |  | Items per page. |
+| `--cursor` | string |  | Cursor of the page to fetch, from the previous page's nextPage. |
 | `--language` | typescript\|python\|go |  | Only generations for this language. |
 
 ### typeship projects generate <project_id>
@@ -121,8 +121,8 @@ GET /projects/{project_id}/spec_versions: List the specs this project has genera
 
 | flag | type | required | description |
 | --- | --- | --- | --- |
-| `--limit` | number |  |  |
-| `--cursor` | string |  |  |
+| `--limit` | number |  | Items per page. |
+| `--cursor` | string |  | Cursor of the page to fetch, from the previous page's nextPage. |
 
 ### typeship spec-versions get <spec_version_id>
 
@@ -152,8 +152,8 @@ GET /api_keys: List API keys
 
 | flag | type | required | description |
 | --- | --- | --- | --- |
-| `--limit` | number |  |  |
-| `--cursor` | string |  |  |
+| `--limit` | number |  | Items per page. |
+| `--cursor` | string |  | Cursor of the page to fetch, from the previous page's nextPage. |
 
 ### typeship api-keys revoke <api_key_id>
 
