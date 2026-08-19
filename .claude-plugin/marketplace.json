@@ -1,0 +1,19 @@
+{
+  "name": "typeship-skills",
+  "owner": { "name": "typeship", "url": "https://typeship.dev" },
+  "metadata": {
+    "description": "Generate a typed SDK, CLI, and MCP server from any OpenAPI or GraphQL spec, and keep them current. Skills for the typeship CLI and API, spec preparation, MCP clients, and CI.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "typeship",
+      "description": "typeship: SDK, CLI, and MCP server generation from a spec, driven from your agent. Includes the typeship MCP server (set TYPESHIP_TOKEN for keyed tools).",
+      "version": "1.0.0",
+      "source": "./",
+      "skills": ["./typeship", "./typeship-cli", "./typeship-api", "./typeship-spec-prep", "./typeship-mcp-clients", "./typeship-ci"],
+      "mcpServers": "./.mcp.json",
+      "keywords": ["typeship", "openapi", "sdk", "cli", "mcp", "codegen", "agent experience"]
+    }
+  ]
+}

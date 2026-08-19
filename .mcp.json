@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "typeship": {
+      "type": "http",
+      "url": "https://typeship.dev/mcp",
+      "headers": { "Authorization": "Bearer ${TYPESHIP_TOKEN}" }
+    }
+  }
+}
