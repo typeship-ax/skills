@@ -9,7 +9,7 @@ allowed-tools: Bash(typeship *), Bash(claude mcp *), Bash(codex mcp *), Read, Wr
 
 Two kinds of server, one procedure.
 
-**typeship's own** at `https://typeship.dev/mcp`: Streamable HTTP, MCP 2026-07-28. Without a key: `search_docs`, `read_docs`, `query_docs`, `submit_docs_feedback`, `generate_run`. With `Authorization: Bearer ak_...`: every typeship operation. Docs: https://typeship.dev/docs/typeship-api/mcp.md.
+**typeship's own**, two doors (Streamable HTTP, MCP 2026-07-28): `https://typeship.dev/mcp-oauth` signs the user in from the client (no key; use it when a person can approve a browser sign-in), and `https://typeship.dev/mcp` takes `Authorization: Bearer ak_...` (headless, CI, or a key already in the environment). Without any key `/mcp` still offers `search_docs`, `read_docs`, `query_docs`, `submit_docs_feedback`, `generate_run`. With sign-in or a key: every typeship operation. A user in several organizations picks the one signed-in agents act in under API keys in the console; until then keyed tools answer `organization_required`. Docs: https://typeship.dev/docs/typeship-api/mcp.md.
 
 **A generated one** (`<bin>-mcp` in a package typeship generated, or a project's hosted endpoint `https://typeship.dev/mcp/<slug>`): same protocol; auth is that API's. Docs: https://typeship.dev/docs/guides/mcp-clients.md.
 
@@ -24,10 +24,10 @@ Both print what was written. Cursor is skipped by `--all` until Cursor speaks MC
 
 ## By hand
 
-Claude Code: `claude mcp add --transport http typeship https://typeship.dev/mcp --header 'Authorization: Bearer ${TYPESHIP_TOKEN}'` (single quotes keep the env reference).
-Codex: `codex mcp add typeship --url https://typeship.dev/mcp --bearer-token-env-var TYPESHIP_TOKEN`.
-JSON clients (`.mcp.json`, `.vscode/mcp.json`, Windsurf, Gemini, OpenCode): `{"mcpServers":{"typeship":{"type":"http","url":"https://typeship.dev/mcp","headers":{"Authorization":"Bearer ${TYPESHIP_TOKEN}"}}}}` (VS Code uses `servers`, OpenCode uses `mcp` with `type: remote`).
-Claude Desktop and claude.ai: add a custom connector with the URL (the desktop config file only launches stdio servers; use `<bin> mcp --claude-desktop` for a local server).
+Claude Code: `claude mcp add --transport http typeship https://typeship.dev/mcp-oauth` (signs in), or `claude mcp add --transport http typeship https://typeship.dev/mcp --header 'Authorization: Bearer ${TYPESHIP_TOKEN}'` with a key (single quotes keep the env reference).
+Codex: `codex mcp add typeship --url https://typeship.dev/mcp-oauth && codex mcp login typeship`, or `codex mcp add typeship --url https://typeship.dev/mcp --bearer-token-env-var TYPESHIP_TOKEN` with a key.
+JSON clients (`.mcp.json`, `.vscode/mcp.json`, Windsurf, Gemini, OpenCode): `{"mcpServers":{"typeship":{"type":"http","url":"https://typeship.dev/mcp-oauth"}}}` to sign in, or the `/mcp` URL with `"headers":{"Authorization":"Bearer ${TYPESHIP_TOKEN}"}` for a key (VS Code uses `servers`, OpenCode uses `mcp` with `type: remote`).
+Claude Desktop and claude.ai: add a custom connector with the `/mcp-oauth` URL (the desktop config file only launches stdio servers; use `<bin> mcp --claude-desktop` for a local server).
 
 Never write a literal key into a client config; reference the environment variable.
 
