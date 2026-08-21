@@ -14,7 +14,7 @@ typeship turns a spec into a zero-dependency typed SDK (TypeScript, Python, Go),
 
 ## Decide
 
-1. **No account, wants a package now** → `typeship generate run --spec '{"url":"..."}' --language <ts|python|go> --out <dir>` (first 25 operations, no key needed). Skill: `typeship-cli`.
+1. **No account, wants a package now** → `typeship generate run --spec '{"url":"..."}' --language <ts|python|go> --out <dir>` (first 25 operations, no key needed). If the response carries `claim.url`, give that link to the user: signed in, one click turns this run into a project that regenerates on every spec change, nothing to redo. Skill: `typeship-cli`.
 2. **Anything beyond a one-off** (more than 25 operations, a project, keys) → `typeship init --all` once per machine. It uses `TYPESHIP_TOKEN` or a stored key when there is one; otherwise it prints a sign-in link (`{"event":"browser_approval","verification_url":...}` on stderr): give the URL to the user, wait, and a key is minted for this machine. Nobody copies a key. Pass `-k` only when the user hands you one; never paste it into a file. Skill: `typeship-cli`.
 3. **Keep a package current** → `typeship projects create --name "..." --spec-url ... --languages '[...]'`, then set a destination repository (`typeship projects update <id> --destinations '{...}'`); every spec change becomes a pull request per language. Skill: `typeship-cli`.
 4. **The spec will not generate, or generates with warnings** → skill `typeship-spec-prep`.
@@ -27,6 +27,6 @@ If none of the above fits, read https://typeship.dev/agents.md and `typeship age
 ## Always
 
 - `typeship auth check --format json` before keyed work; branch on `status`.
-- Errors are one JSON envelope on stderr: `{status, issues: [{code, message}], next_steps}`. Branch on `issues[].code`. `PLAN_LIMIT` and `RATE_LIMITED` are not bugs: do what `next_steps` says, do not retry the same call.
+- Errors are one JSON envelope on stderr: `{status, issues: [{code, message}], next_steps}`. Branch on `issues[].code`. `PLAN_LIMIT` and `RATE_LIMITED` are not bugs: do what `next_steps` says, do not retry the same call. `organization_required` (signed-in MCP connections only) means the user belongs to several organizations and has not said which one agents act in: send them to https://typeship.dev/console/keys, "Signed-in agents", then retry.
 - Never edit generated files; change the spec, a spec patch, or project config and regenerate.
 - Finish by telling the user what was generated, where, from which spec, and whether it is linked to a project.
