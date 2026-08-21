@@ -26,4 +26,4 @@ Or per harness:
 
 Docs: https://typeship.dev/llms.txt. The runbook an agent reads first: https://typeship.dev/agents.md.
 
-These skills live in the typeship monorepo under `skills/` until the `typeship-ax` GitHub organization has a home for them (issue #22), then move to `github.com/typeship-ax/skills` unchanged.
+This repository is published from the `skills/` directory of the typeship monorepo on every change; edit them there, not here. Feedback: hello@typeship.dev.
