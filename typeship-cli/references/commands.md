@@ -44,7 +44,7 @@ POST /projects: Create a project
 | `--auto-regen` | boolean |  |  |
 | `--package-name` | string |  |  |
 | `--spec-patches` | object[] |  |  |
-| `--mcp-enabled` | boolean |  | Requires the mcp platform and Pro. |
+| `--mcp-enabled` | boolean |  | Requires the mcp platform and Enterprise. |
 | `--relay-enabled` | boolean |  | Requires the cli platform and Pro. |
 | `--config` | json |  |  |
 
@@ -73,7 +73,7 @@ PATCH /projects/{project_id}: Update a project
 | `--auto-regen` | boolean |  |  |
 | `--package-name` | string |  |  |
 | `--spec-patches` | object[] |  |  |
-| `--mcp-enabled` | boolean |  | Serve this project as a hosted remote MCP endpoint. Requires the mcp platform and Pro. |
+| `--mcp-enabled` | boolean |  | Serve this project as a hosted remote MCP endpoint. Requires the mcp platform and Enterprise. |
 | `--relay-enabled` | boolean |  | Enable the webhook relay so the generated CLI's webhooks listen command works for this API's users. Requires the cli platform and Pro. |
 | `--config` | json |  | Replaces the whole config. Pass null to clear it. |
 
