@@ -1,17 +1,17 @@
 # typeship skills
 
-Agent Skills (agentskills.io) for using typeship: generate a typed SDK, CLI, or MCP server from an OpenAPI or GraphQL spec, keep it current with pull requests, and drive typeship's own API from a coding agent. Each skill wraps the `typeship` CLI (`npm install -g typeship`), which prints JSON and speaks the agent contract (`typeship agent-guide`).
+Agent Skills (agentskills.io) for using typeship: generate a typed SDK, CLI, or MCP server from an OpenAPI or GraphQL spec, keep it current with pull requests, and drive typeship's own API from a coding agent. Each skill wraps the `typeship` CLI (`npm install -g typeship-ax`), which prints JSON and speaks the agent contract (`typeship agent-guide`).
 
 Install into every agent on your machine:
 
 ```bash
-npx skills add typeship/skills
+npx skills add typeship-ax/skills
 ```
 
 Or per harness:
 
-- Claude Code: `/plugin marketplace add typeship/skills` then `/plugin install typeship@typeship-skills`
-- Codex: `codex plugin marketplace add typeship/skills`
+- Claude Code: `/plugin marketplace add typeship-ax/skills` then `/plugin install typeship@typeship-skills`
+- Codex: `codex plugin marketplace add typeship-ax/skills`
 - Cursor: `/add-plugin typeship`
 - Any harness: `typeship init --all` installs these skills and writes the MCP config in one go
 
@@ -26,4 +26,4 @@ Or per harness:
 
 Docs: https://typeship.dev/llms.txt. The runbook an agent reads first: https://typeship.dev/agents.md.
 
-These skills live in the typeship monorepo under `skills/` until the `typeship` GitHub organization exists (issue #22), then move to `github.com/typeship/skills` unchanged.
+These skills live in the typeship monorepo under `skills/` until the `typeship-ax` GitHub organization has a home for them (issue #22), then move to `github.com/typeship-ax/skills` unchanged.
