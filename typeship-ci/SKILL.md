@@ -14,7 +14,7 @@ Key: create one in the console (`https://typeship.dev/console/keys`), store it a
 ## Regenerate a project and commit
 
 ```yaml
-- run: npm install -g typeship
+- run: npm install -g typeship-ax
 - run: typeship projects generate prj_... > generations.json
   env: { TYPESHIP_TOKEN: ${{ secrets.TYPESHIP_TOKEN }} }
 - run: |

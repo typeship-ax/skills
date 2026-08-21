@@ -9,7 +9,7 @@ allowed-tools: Bash(curl *), Read, Write
 
 Base URL `https://typeship.dev/api/v1`. Contract: https://typeship.dev/openapi.yaml. Reference with curl for every operation: https://typeship.dev/docs/api.md. Errors: `{errors: [{code, message}], request_id}` (`x-request-id` header); codes `invalid_request`, `unauthorized`, `plan_limit_reached`, `not_found`, `payload_too_large`, `spec_error`, `fetch_error`, `rate_limited`, `internal_error`. Pagination: `?limit=&cursor=` and `has_more`, `next_cursor`.
 
-Auth: `Authorization: Bearer tsk_live_...` on every call except `POST /generate`, which works anonymously (first 25 operations, 20 requests a minute per address, `X-RateLimit-*` headers, `limits` object in the response). A present but invalid key is a 401, never a downgrade.
+Auth: `Authorization: Bearer ak_...` on every call except `POST /generate`, which works anonymously (first 25 operations, 20 requests a minute per address, `X-RateLimit-*` headers, `limits` object in the response). A present but invalid key is a 401, never a downgrade.
 
 ## Generate
 

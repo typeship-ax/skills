@@ -7,7 +7,7 @@ allowed-tools: Bash(typeship *), Bash(npx typeship *), Read, Write
 
 # typeship CLI
 
-`npm install -g typeship` (or `npx -y typeship@latest ...`). JSON on stdout, one JSON envelope on stderr for errors, exit 0/1/2. Full contract: `typeship agent-guide --format json`; command surface as data: `typeship help --json`. Reference: `references/commands.md`, `references/agent-contract.md`.
+`npm install -g typeship-ax` (or `npx -y typeship-ax@latest ...`). JSON on stdout, one JSON envelope on stderr for errors, exit 0/1/2. Full contract: `typeship agent-guide --format json`; command surface as data: `typeship help --json`. Reference: `references/commands.md`, `references/agent-contract.md`.
 
 ## First
 

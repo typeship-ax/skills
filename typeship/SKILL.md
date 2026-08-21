@@ -10,7 +10,7 @@ metadata:
 
 # typeship
 
-typeship turns a spec into a zero-dependency typed SDK (TypeScript, Python, Go), a CLI, and an MCP server, and keeps them current: a linked project regenerates on every spec change and opens a pull request per language. Everything below is the `typeship` CLI (`npm install -g typeship`, JSON out, agent contract) or the REST API at `https://typeship.dev/api/v1`.
+typeship turns a spec into a zero-dependency typed SDK (TypeScript, Python, Go), a CLI, and an MCP server, and keeps them current: a linked project regenerates on every spec change and opens a pull request per language. Everything below is the `typeship` CLI (`npm install -g typeship-ax`, JSON out, agent contract) or the REST API at `https://typeship.dev/api/v1`.
 
 ## Decide
 

@@ -9,7 +9,7 @@ allowed-tools: Bash(typeship *), Bash(claude mcp *), Bash(codex mcp *), Read, Wr
 
 Two kinds of server, one procedure.
 
-**typeship's own** at `https://typeship.dev/mcp`: Streamable HTTP, MCP 2026-07-28. Without a key: `search_docs`, `read_docs`, `generate_run`. With `Authorization: Bearer tsk_live_...`: every typeship operation. Docs: https://typeship.dev/docs/typeship-api/mcp.md.
+**typeship's own** at `https://typeship.dev/mcp`: Streamable HTTP, MCP 2026-07-28. Without a key: `search_docs`, `read_docs`, `query_docs`, `submit_docs_feedback`, `generate_run`. With `Authorization: Bearer ak_...`: every typeship operation. Docs: https://typeship.dev/docs/typeship-api/mcp.md.
 
 **A generated one** (`<bin>-mcp` in a package typeship generated, or a project's hosted endpoint `https://typeship.dev/mcp/<slug>`): same protocol; auth is that API's. Docs: https://typeship.dev/docs/guides/mcp-clients.md.
 
@@ -33,4 +33,4 @@ Never write a literal key into a client config; reference the environment variab
 
 ## Verify
 
-`typeship doctor` (or `<bin> doctor`) reports which clients are detected and configured. In the client, list tools; anonymous typeship connections show exactly three.
+`typeship doctor` (or `<bin> doctor`) reports which clients are detected and configured. In the client, list tools; anonymous typeship connections show exactly five.
