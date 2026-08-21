@@ -27,7 +27,7 @@ typeship generate run --spec "{\"inline\":$(jq -Rs . < openapi.yaml)}" --languag
 typeship generate run --spec '{"url":"..."}' --platforms '["sdk","cli","mcp"]' --out sdk/   # TypeScript only for cli/mcp
 ```
 
-`--out` writes the files and prints `{meta, warnings, limits?, out: {written, dir}}`. Without `--out`, the whole response prints (large). If `limits` is present, the spec was capped: report `omitted_operations` and that a key lifts it.
+`--out` writes the files and prints `{meta, warnings, limits?, out: {written, dir}}`. Without `--out`, the whole response prints (large). If `limits` is present, read `omitted_operations` and `reason`. Report omissions only when the count is above zero. For `reason: "anonymous"`, offer authentication at `signup_url` without promising that a free account lifts the cap. For `reason: "free_plan"`, a key is already present: send the user to `upgrade_url`, not back to login or key setup.
 
 ## Projects (keyed)
 
