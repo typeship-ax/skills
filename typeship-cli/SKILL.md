@@ -13,7 +13,8 @@ allowed-tools: Bash(typeship *), Bash(npx typeship *), Read, Write
 
 ```bash
 typeship auth check --format json     # {status: ok|action_required, source, next_steps}
-typeship init --all -k "$TYPESHIP_TOKEN"   # once per machine when a key exists: stores it, installs skills, MCP config, AGENTS.md block
+typeship init --all                   # once per machine: stores the key (or prints a sign-in link and waits for the user), installs skills, MCP config, AGENTS.md block
+typeship init --all -k "$TYPESHIP_TOKEN"   # the same when the user hands you a key
 ```
 
 ## Generate

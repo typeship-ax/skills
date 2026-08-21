@@ -10,15 +10,15 @@ metadata:
 
 # typeship
 
-typeship turns a spec into a zero-dependency typed SDK (TypeScript, Python, Go), a CLI, and an MCP server, and keeps them current: a linked project regenerates on every spec change and opens a pull request per language. Everything below is the `typeship` CLI (`npm install -g typeship-ax`, JSON out, agent contract) or the REST API at `https://typeship.dev/api/v1`.
+typeship turns a spec into a zero-dependency typed SDK (TypeScript, Python, Go), a CLI, and an MCP server, and keeps them current: a linked project regenerates on every spec change and opens a pull request per language. In a terminal, everything below is the `typeship` CLI (`npm install -g typeship-ax`, or `npx -y typeship-ax@latest ...`; JSON out, agent contract). In a chat client the same operations are tools on typeship's MCP server (skill `typeship-mcp-clients`); the REST API is at `https://typeship.dev/api/v1`.
 
 ## Decide
 
 1. **No account, wants a package now** → `typeship generate run --spec '{"url":"..."}' --language <ts|python|go> --out <dir>` (first 25 operations, no key needed). Skill: `typeship-cli`.
-2. **Has a key** (`TYPESHIP_TOKEN` set or provided) → `typeship init --all -k "$TYPESHIP_TOKEN"` once, then generate or create a project. Skill: `typeship-cli`.
-3. **Needs a key** → ask the user to create one at https://typeship.dev/console/keys and export `TYPESHIP_TOKEN`; never paste it into a file. Then 2.
+2. **Anything beyond a one-off** (more than 25 operations, a project, keys) → `typeship init --all` once per machine. It uses `TYPESHIP_TOKEN` or a stored key when there is one; otherwise it prints a sign-in link (`{"event":"browser_approval","verification_url":...}` on stderr): give the URL to the user, wait, and a key is minted for this machine. Nobody copies a key. Pass `-k` only when the user hands you one; never paste it into a file. Skill: `typeship-cli`.
+3. **Keep a package current** → `typeship projects create --name "..." --spec-url ... --languages '[...]'`, then set a destination repository (`typeship projects update <id> --destinations '{...}'`); every spec change becomes a pull request per language. Skill: `typeship-cli`.
 4. **The spec will not generate, or generates with warnings** → skill `typeship-spec-prep`.
-5. **Connect an agent client to typeship's MCP server (or a generated one)** → skill `typeship-mcp-clients`.
+5. **Connect an agent client to typeship's MCP server (or a generated one)** → skill `typeship-mcp-clients`. A person present: the `/mcp-oauth` door signs them in; headless: `/mcp` with a key.
 6. **Pipeline / CI** → skill `typeship-ci`.
 7. **No CLI available, REST only** → skill `typeship-api`.
 
