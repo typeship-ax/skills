@@ -26,4 +26,4 @@ Or per harness:
 
 Docs: https://typeship.dev/llms.txt. The runbook an agent reads first: https://typeship.dev/agents.md.
 
-This repository is published from the `skills/` directory of the typeship monorepo on every change; edit them there, not here. Feedback: hello@typeship.dev.
+This repository is proposed from the `skills/` directory of the Typeship monorepo as a reviewed pull request; it is never mirrored directly to main. Edit the source there. Feedback: hello@typeship.dev.
