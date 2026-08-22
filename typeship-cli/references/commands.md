@@ -11,8 +11,7 @@ POST /generate: Generate a package from a spec
 | flag | type | required | description |
 | --- | --- | --- | --- |
 | `--spec` | object | yes | The spec to generate from. Provide exactly one of url or inline. |
-| `--platforms` | sdk\|cli\|mcp[] |  | Artifacts to generate from the spec. Defaults to [sdk]. |
-| `--language` | typescript\|python\|go |  | Language to generate. Python and Go produce the SDK only; the CLI and MCP server are TypeScript artifacts and are skipped with a warning when requested alongside them. Default: "typescript". |
+| `--outputs` | enum[] | yes | Outputs for one delivery package. Choose one SDK output, or TypeScript SDK, CLI, and MCP in any combination. Linked projects can generate outputs in all ecosystems. |
 | `--package-name` | string |  | npm name override for the generated package. |
 | `--config` | object |  | Everything typeship needs beyond the spec, in one object: generation customization (globals, retries, pagination) and how the generated tooling behaves (cli, mcp, package, docs_url). Plain configuration. typeship never requires vendor extensions inside the spec itself. The same shape is accepted on a project and on POST /generate. |
 
@@ -36,16 +35,12 @@ POST /projects: Create a project
 | `--name` | string | yes |  |
 | `--spec-url` | string |  | Spec location for a URL-sourced project. Provide this or source; a project with neither has nothing to generate. |
 | `--source` | object |  | Where the project's spec lives. |
-| `--platforms` | sdk\|cli\|mcp[] |  | Artifacts to build. sdk is implied; cli and mcp require typescript among the languages. Free projects run one platform in total (one SDK language); more is a 402 until the account is on Pro. |
-| `--languages` | typescript\|python\|go[] |  | Languages to generate. Each is a separate package, a separate pull request, a separate hosted generation, and one platform for billing. Defaults to typescript alone. |
-| `--destinations` | object |  | Per-language pull-request destination, keyed by language. |
-| `--package-names` | object |  | Registry name per language; unset derives from the API title. |
-| `--destination` | json |  |  |
+| `--outputs` | enum[] | yes | First-class outputs to keep current. Any non-empty combination is valid. |
+| `--packages` | object |  | Delivery packages keyed by registry ecosystem. TypeScript SDK, CLI, and MCP share npm delivery without becoming the same output. Python and Go SDKs use their own package ecosystems. |
 | `--auto-regen` | boolean |  |  |
-| `--package-name` | string |  |  |
 | `--spec-patches` | object[] |  |  |
-| `--mcp-enabled` | boolean |  | Requires the mcp platform and Enterprise. |
-| `--relay-enabled` | boolean |  | Requires the cli platform and Pro. |
+| `--mcp-enabled` | boolean |  | Requires the MCP output and Enterprise. |
+| `--relay-enabled` | boolean |  | Requires the CLI output and Pro. |
 | `--config` | json |  |  |
 
 ### typeship projects get <project_id>
@@ -65,16 +60,12 @@ PATCH /projects/{project_id}: Update a project
 | `--name` | string |  |  |
 | `--spec-url` | string |  |  |
 | `--source` | object |  | Where the project's spec lives. |
-| `--platforms` | sdk\|cli\|mcp[] |  | Artifacts to build; replaces the list. Dropping cli or mcp turns off the hosted feature it serves. cli and mcp require typescript among the languages. Turning a platform off stops generating it; nothing already delivered is removed. |
-| `--destination` | json |  |  |
-| `--languages` | typescript\|python\|go[] |  | Languages to generate; replaces the list. Each is its own hosted generation and one platform for billing. |
-| `--destinations` | object |  | Per-language pull-request destination, keyed by language. |
-| `--package-names` | object |  | Registry name per language; unset derives from the API title. |
+| `--outputs` | enum[] |  | First-class outputs; replaces the selection. Turning one off stops generating it; nothing already delivered is removed. |
+| `--packages` | object |  | Delivery packages keyed by registry ecosystem. TypeScript SDK, CLI, and MCP share npm delivery without becoming the same output. Python and Go SDKs use their own package ecosystems. |
 | `--auto-regen` | boolean |  |  |
-| `--package-name` | string |  |  |
 | `--spec-patches` | object[] |  |  |
-| `--mcp-enabled` | boolean |  | Serve this project as a hosted remote MCP endpoint. Requires the mcp platform and Enterprise. |
-| `--relay-enabled` | boolean |  | Enable the webhook relay so the generated CLI's webhooks listen command works for this API's users. Requires the cli platform and Pro. |
+| `--mcp-enabled` | boolean |  | Serve this project as a hosted remote MCP endpoint. Requires the MCP output and Enterprise. |
+| `--relay-enabled` | boolean |  | Enable the webhook relay so the generated CLI's webhooks listen command works for this API's users. Requires the CLI output and Pro. |
 | `--config` | json |  | Replaces the whole config. Pass null to clear it. |
 
 ### typeship projects list-generations <project_id>
@@ -89,7 +80,7 @@ GET /projects/{project_id}/generations: List a project's generations
 
 ### typeship projects generate <project_id>
 
-POST /projects/{project_id}/generations: Run a hosted generation
+POST /projects/{project_id}/generations: Generate outputs and open pull requests
 
 ### typeship projects mcp-usage <project_id>
 
