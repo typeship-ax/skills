@@ -17,21 +17,23 @@ Auth: `Authorization: Bearer ak_...` on every call except `POST /generate`, whic
 curl -s https://typeship.dev/api/v1/generate \
   -H "Content-Type: application/json" \
   ${TYPESHIP_TOKEN:+-H "Authorization: Bearer $TYPESHIP_TOKEN"} \
-  -d '{"spec":{"url":"https://api.example.com/openapi.json"},"platforms":["sdk"],"language":"python"}'
+  -d '{"spec":{"url":"https://api.example.com/openapi.json"},"outputs":["python-sdk"]}'
 ```
 
-Response `{files: [{path, content}], warnings, meta, limits?}`. Inline spec: `"spec":{"inline":"<text>"}`. `platforms`: `sdk`, `cli`, `mcp` (cli and mcp are TypeScript only). `package_name`, `config` optional.
+Response `{files: [{path, content}], warnings, meta, limits?}`. Inline spec: `"spec":{"inline":"<text>"}`. `outputs` accepts `typescript-sdk`, `python-sdk`, `go-sdk`, `cli`, and `mcp`. One stateless request returns one delivery package; linked projects can select all five. `package_name` and `config` are optional.
 
 Write files: `jq -r '.files[] | @base64' | while read f; do ...; done`, or `python3 -c 'import json,sys,os; d=json.load(sys.stdin); [ (os.makedirs(os.path.dirname("sdk/"+f["path"]) or "sdk", exist_ok=True), open("sdk/"+f["path"],"w").write(f["content"])) for f in d["files"] ]'`.
 
 ## Projects and generations (key required)
 
+Free includes one stored project, every selected output, and the first 25 operations, with unlimited automatic and manual regeneration, history, destination pull requests, and preview checks. Stateless `POST /generate` remains separate and does not consume the project slot. Pro adds projects and the whole spec.
+
 | Do | Call |
 | --- | --- |
 | List projects | `GET /projects?limit=&cursor=` |
-| Create | `POST /projects` `{name, spec_url | source, languages, destinations?, package_names?, config?, spec_patches?, auto_regen?, mcp_enabled?, relay_enabled?}` |
+| Create | `POST /projects` `{name, spec_url | source, outputs, packages?, config?, spec_patches?, auto_regen?, mcp_enabled?, relay_enabled?}` |
 | Get / update / delete | `GET|PATCH|DELETE /projects/{id}` |
-| Regenerate now (URL-sourced) | `POST /projects/{id}/generations` → `{data: [generation per language]}` |
+| Regenerate now (URL or repository source) | `POST /projects/{id}/generations` → `{data: [generation per delivery package]}`; `meta.pr_status` is `opened`, `no_changes`, or `blocked` |
 | History | `GET /projects/{id}/generations` |
 | One generation | `GET /generations/{id}`; large ones return `files_omitted: true` and `files_index` |
 | One file | `GET /generations/{id}/file?path=src/index.ts` |

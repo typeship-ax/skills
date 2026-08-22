@@ -19,21 +19,23 @@ typeship init --all -k "$TYPESHIP_TOKEN"   # the same when the user hands you a 
 
 ## Generate
 
-Anonymous works (first 25 operations, 20/min per address, nothing stored). With a key the plan's limits apply.
+Anonymous works (first 25 operations, 20/min per address; spec contents and generated files are not retained). URL runs keep a seven-day claim recipe and return its link. With a key the plan's limits apply.
 
 ```bash
-typeship generate run --spec '{"url":"https://api.example.com/openapi.json"}' --language typescript --out sdk/
-typeship generate run --spec "{\"inline\":$(jq -Rs . < openapi.yaml)}" --language python --out sdk/
-typeship generate run --spec '{"url":"..."}' --platforms '["sdk","cli","mcp"]' --out sdk/   # TypeScript only for cli/mcp
+typeship generate run --spec '{"url":"https://api.example.com/openapi.json"}' --outputs '["typescript-sdk"]' --out generated/
+typeship generate run --spec "{\"inline\":$(jq -Rs . < openapi.yaml)}" --outputs '["python-sdk"]' --out generated/
+typeship generate run --spec '{"url":"..."}' --outputs '["typescript-sdk","cli","mcp"]' --out generated/
 ```
 
 `--out` writes the files and prints `{meta, warnings, limits?, out: {written, dir}}`. Without `--out`, the whole response prints (large). If `limits` is present, read `omitted_operations` and `reason`. Report omissions only when the count is above zero. For `reason: "anonymous"`, offer authentication at `signup_url` without promising that a free account lifts the cap. For `reason: "free_plan"`, a key is already present: send the user to `upgrade_url`, not back to login or key setup.
 
 ## Projects (keyed)
 
+Free includes one stored project, every selected output, and the first 25 operations. That project still gets on-demand and automatic regeneration, history, destination pull requests, and preview checks without a run quota. Stateless `generate run` never consumes the project slot. Pro adds projects and the whole spec; each selected output is a billing unit on Pro.
+
 ```bash
-typeship projects create --name "Acme API" --spec-url https://api.example.com/openapi.json --languages '["typescript","python"]'
-typeship projects generate <project_id>          # regenerate; returns every language's files (large: redirect to a file)
+typeship projects create --name "Acme API" --spec-url https://api.example.com/openapi.json --outputs '["typescript-sdk","python-sdk","cli","mcp"]'
+typeship projects generate <project_id>          # regenerate; returns every delivery package's files (large: redirect to a file)
 typeship projects list-generations <project_id>
 typeship generations get <generation_id>
 typeship generations get-file <generation_id> --path src/index.ts
@@ -41,7 +43,9 @@ typeship projects update <project_id> --spec-patches '[...]' --config '{...}'
 typeship projects delete <project_id> --force    # DELETE needs --force; without it: CONFIRMATION_REQUIRED
 ```
 
-`typeship projects create --help` lists every field. Repository-sourced projects (`--source '{"kind":"repo",...}'`) regenerate on push, not on demand.
+`projects generate` opens a pull request only when the complete generated tree differs from the destination. An already-current destination returns `meta.pr_status: "no_changes"` without creating a commit or branch.
+
+`typeship projects create --help` lists every field. Repository-sourced projects (`--source '{"kind":"repo",...}'`) regenerate on pushes that change the spec and can also be forced on demand with `typeship projects generate`.
 
 ## Read the envelope
 

@@ -1,6 +1,6 @@
 ---
 name: typeship-ci
-description: Run typeship in a pipeline - regenerate a linked project on a schedule and commit the packages, generate ad hoc from a spec, or gate a release on spec drift with a generated CLI's --validate. Use when the user wants typeship in GitHub Actions or another CI system.
+description: Run typeship in a pipeline - trigger a linked project's normal destination pull request, generate ad hoc from a spec into a checkout, or gate a release on spec drift with a generated CLI's --validate. Use when the user wants typeship in GitHub Actions or another CI system.
 license: MIT
 allowed-tools: Bash(typeship *), Read, Write
 ---
@@ -11,26 +11,19 @@ Linked projects with a destination regenerate on their own and open pull request
 
 Key: create one in the console (`https://typeship.dev/console/keys`), store it as the secret `TYPESHIP_TOKEN`. The CLI reads it from the environment; no login step.
 
-## Regenerate a project and commit
+## Trigger the project's normal pull request
 
 ```yaml
 - run: npm install -g typeship-ax
-- run: typeship projects generate prj_... > generations.json
+- run: typeship projects generate prj_...
   env: { TYPESHIP_TOKEN: ${{ secrets.TYPESHIP_TOKEN }} }
-- run: |
-    node -e '
-      const fs=require("fs"),path=require("path");
-      for (const g of JSON.parse(fs.readFileSync("generations.json")).data) {
-        if (g.status!=="succeeded") { console.error(g.language,g.error); process.exit(1); }
-        for (const f of g.files) { const p=path.join("packages",g.language,f.path); fs.mkdirSync(path.dirname(p),{recursive:true}); fs.writeFileSync(p,f.content); }
-      }'
 ```
 
-Large generations return `files_omitted: true` with `files_index`; fetch each with `typeship generations get-file <id> --path <p>`.
+This runs the same URL- or repository-sourced project pipeline as a spec push: it records history and a spec version, then opens one pull request per changed destination with the compatibility report and semver check. A destination whose complete generated tree already matches reports `pr_status: no_changes` and gets no commit, branch, or pull request. Do not unpack and recommit this response; that would bypass the destination workflow you configured.
 
-## Ad hoc, no project
+## Generate into this checkout
 
-`typeship generate run --spec '{"url":"..."}' --language typescript --out packages/typescript` (anonymous: first 25 operations).
+Use the stateless command when this CI job owns the commit: `typeship generate run --spec '{"url":"..."}' --outputs '["typescript-sdk"]' --out packages/typescript`. Anonymous and Free runs cover the first 25 operations; stateless runs do not use a linked-project slot.
 
 ## Spec drift gate
 

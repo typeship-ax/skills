@@ -12,7 +12,7 @@ typeship generates from the spec as written. The better the spec, the better the
 ## Check first
 
 ```bash
-typeship generate run --spec '{"url":"..."}' --language typescript > /tmp/gen.json 2>/tmp/gen.err
+typeship generate run --spec '{"url":"..."}' --outputs '["typescript-sdk"]' > /tmp/gen.json 2>/tmp/gen.err
 jq '.warnings' /tmp/gen.json      # every warning, verbatim
 cat /tmp/gen.err                  # SPEC_INVALID envelope when the spec cannot be used at all
 ```
