@@ -7,7 +7,7 @@ allowed-tools: Bash(curl *), Read, Write
 
 # typeship REST API
 
-Base URL `https://typeship.dev/api/v1`. Contract: https://typeship.dev/openapi.yaml. Reference with curl for every operation: https://typeship.dev/docs/api.md. Errors: `{errors: [{code, message}], request_id}` (`x-request-id` header); codes `invalid_request`, `unauthorized`, `plan_limit_reached`, `not_found`, `payload_too_large`, `spec_error`, `fetch_error`, `rate_limited`, `internal_error`. Pagination: `?limit=&cursor=` and `has_more`, `next_cursor`.
+Base URL `https://typeship.dev/api/v1`. Contract: https://typeship.dev/openapi.yaml. Reference with curl for every operation: https://typeship.dev/docs/api.md. Errors: `{errors: [{type, code, message, retryable, suggested_action, docs_url}], request_id}` (`x-request-id` header); branch on `code` and `retryable`, follow `suggested_action`, and never branch on message. Pagination: `?limit=&cursor=` returns `{object: "list", data, has_more, next_cursor}`.
 
 Auth: `Authorization: Bearer ak_...` on every call except `POST /generate`, which works anonymously (first 25 operations, 20 requests a minute per address, `X-RateLimit-*` headers, `limits` object in the response). A present but invalid key is a 401, never a downgrade.
 
@@ -38,8 +38,7 @@ Free includes one stored project, every selected output, and the first 25 operat
 | One generation | `GET /generations/{id}`; large ones return `files_omitted: true` and `files_index` |
 | One file | `GET /generations/{id}/file?path=src/index.ts` |
 | Spec versions | `GET /projects/{id}/spec_versions`, `GET /spec_versions/{id}`, `GET /spec_versions/{id}/content` |
-| Hosted MCP usage | `GET /projects/{id}/mcp_usage` |
-| Account, usage | `GET /me`, `PATCH /me`, `GET /usage` |
+| Account | `GET /me` |
 | Keys | `GET /api_keys`, `DELETE /api_keys/{id}` (creation is console-only) |
 
 Docs for any of these: fetch `https://typeship.dev/docs/typeship-api/api.md` (overview) or the operation in `https://typeship.dev/docs/api.md`.

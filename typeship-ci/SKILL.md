@@ -19,7 +19,7 @@ Key: create one in the console (`https://typeship.dev/console/keys`), store it a
   env: { TYPESHIP_TOKEN: ${{ secrets.TYPESHIP_TOKEN }} }
 ```
 
-This runs the same URL- or repository-sourced project pipeline as a spec push: it records history and a spec version, then opens one pull request per changed destination with the compatibility report and semver check. A destination whose complete generated tree already matches reports `pr_status: no_changes` and gets no commit, branch, or pull request. Do not unpack and recommit this response; that would bypass the destination workflow you configured.
+This runs the same URL- or repository-sourced project pipeline as a spec push: it records history and a spec version, then opens one pull request per changed destination with a release-style body and package compatibility check. A destination whose complete generated tree already matches reports `pr_status: no_changes` and gets no commit, branch, or pull request. Do not unpack and recommit this response; that would bypass the destination workflow you configured.
 
 ## Generate into this checkout
 
