@@ -11,6 +11,8 @@ Base URL `https://typeship.dev/api/v1`. Contract: https://typeship.dev/openapi.y
 
 Auth: `Authorization: Bearer ak_...` on every call except `POST /generate`, which works anonymously (first 25 operations, 20 requests a minute per address, `X-RateLimit-*` headers, `limits` object in the response). A present but invalid key is a 401, never a downgrade.
 
+For `POST /projects`, send a stable `Idempotency-Key` for the logical creation attempt. Repeating the same body and key returns the original response; using that key with different parameters returns `idempotency_key_reused` (409).
+
 ## Generate
 
 ```bash
@@ -26,19 +28,21 @@ Write files: `jq -r '.files[] | @base64' | while read f; do ...; done`, or `pyth
 
 ## Projects and generations (key required)
 
-Free includes one stored project, every selected output, and the first 25 operations, with unlimited automatic and manual regeneration, history, destination pull requests, and preview checks. Stateless `POST /generate` remains separate and does not consume the project slot. Pro adds projects and the whole spec.
+Free includes one stored project and every selected output, with unlimited automatic and manual regeneration, history, destination pull requests, and preview checks. The complete linked specification is retained and reviewed; generated packages include the first 25 operations. Stateless `POST /generate` remains separate and does not consume the project slot. Pro generates the remaining operations from the same source and adds projects.
 
 | Do | Call |
 | --- | --- |
 | List projects | `GET /projects?limit=&cursor=` |
-| Create | `POST /projects` `{name, spec_url | source, outputs, packages?, config?, spec_patches?, auto_regen?, mcp_enabled?, relay_enabled?}` |
+| Create | `POST /projects` `{name, source, outputs, packages?, config?, spec_patches?, auto_regen?, mcp_enabled?, relay_enabled?}` with `Idempotency-Key` |
 | Get / update / delete | `GET|PATCH|DELETE /projects/{id}` |
-| Regenerate now (URL or repository source) | `POST /projects/{id}/generations` → `{data: [generation per delivery package]}`; `meta.pr_status` is `opened`, `no_changes`, or `blocked` |
+| Regenerate now (URL or GitHub source) | `POST /projects/{id}/generations` → `{data: [generation per delivery package]}`; `meta.pr_status` is `opened`, `no_changes`, or `blocked` |
 | History | `GET /projects/{id}/generations` |
 | One generation | `GET /generations/{id}`; large ones return `files_omitted: true` and `files_index` |
 | One file | `GET /generations/{id}/file?path=src/index.ts` |
-| Spec versions | `GET /projects/{id}/spec_versions`, `GET /spec_versions/{id}`, `GET /spec_versions/{id}/content` |
+| Spec revisions | `GET /projects/{id}/spec_revisions`, `GET /spec_revisions/{id}`, `GET /spec_revisions/{id}/content` |
 | Account | `GET /me` |
 | Keys | `GET /api_keys`, `DELETE /api_keys/{id}` (creation is console-only) |
 
 Docs for any of these: fetch `https://typeship.dev/docs/typeship-api/api.md` (overview) or the operation in `https://typeship.dev/docs/api.md`.
+
+`source` is a closed union: `{kind: "url", url, headers?}` or `{kind: "github", repository, path}`. URL headers are write-only; responses expose only `headers_configured`. When updating the same URL, omit `headers` to preserve them or pass `null` to remove them. Changing the URL without headers clears the old values.

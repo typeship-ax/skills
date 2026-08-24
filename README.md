@@ -1,6 +1,6 @@
 # typeship skills
 
-Agent Skills (agentskills.io) for using typeship: generate a typed SDK, CLI, or MCP server from an OpenAPI or GraphQL spec, keep it current with pull requests, and drive typeship's own API from a coding agent. Each skill wraps the `typeship` CLI (`npm install -g typeship-ax`), which prints JSON and speaks the agent contract (`typeship agent-guide`).
+Agent Skills (agentskills.io) for using typeship: generate a typed SDK, CLI, or MCP server from an OpenAPI or GraphQL spec, keep it current with pull requests, and drive typeship's own API from a coding agent. Each skill wraps the `typeship` CLI (`npm install -g @typeship-ax/cli`), which prints JSON and speaks the agent contract (`typeship agent-guide`).
 
 Install into every agent on your machine:
 
