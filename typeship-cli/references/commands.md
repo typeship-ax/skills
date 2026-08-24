@@ -10,9 +10,9 @@ POST /generate: Generate a package from a spec
 
 | flag | type | required | description |
 | --- | --- | --- | --- |
-| `--spec` | object | yes | The spec to generate from. Provide exactly one of url or inline. |
-| `--outputs` | enum[] | yes | Outputs for one delivery package. Choose one SDK output, or TypeScript SDK, CLI, and MCP in any combination. Linked projects can generate outputs in all ecosystems. |
-| `--package-name` | string |  | npm name override for the generated package. |
+| `--spec` | json | yes | The specification for stateless generation, provided as exactly one URL or inline document. |
+| `--outputs` | enum[] | yes | The one output package to generate. Linked projects can select any combination of outputs and keep each package current. |
+| `--package-name` | string |  | Registry name for the selected delivery package: an npm package, Python distribution, or Go module path. Defaults to a name derived from the API title. |
 | `--config` | object |  | Everything typeship needs beyond the spec, in one object: generation customization (globals, retries, pagination) and how the generated tooling behaves (cli, mcp, package, docs_url). Plain configuration. typeship never requires vendor extensions inside the spec itself. The same shape is accepted on a project and on POST /generate. |
 
 ## projects
@@ -33,15 +33,15 @@ POST /projects: Create a project
 | flag | type | required | description |
 | --- | --- | --- | --- |
 | `--name` | string | yes |  |
-| `--spec-url` | string |  | Spec location for a URL-sourced project. Provide this or source; a project with neither has nothing to generate. |
-| `--source` | object |  | Where a project's spec lives, including optional write-only fetch credentials. |
-| `--outputs` | enum[] | yes | First-class outputs to keep current. Any non-empty combination is valid. |
-| `--packages` | object |  | Delivery packages keyed by registry ecosystem. TypeScript SDK, CLI, and MCP share npm delivery without becoming the same output. Python and Go SDKs use their own package ecosystems. |
-| `--auto-regen` | boolean |  |  |
-| `--spec-patches` | object[] |  |  |
-| `--mcp-enabled` | boolean |  | Requires the MCP output and Enterprise. |
-| `--relay-enabled` | boolean |  | Requires the CLI output and Pro. |
+| `--source` | json | yes |  |
+| `--outputs` | enum[] | yes | First-class outputs Typeship will keep current for this project. |
+| `--packages` | object |  | Independent delivery packages keyed by output. Every selected output owns its registry identity, version, destination pull request, and release lifecycle. Selected outputs must resolve to distinct repository-and-directory trees; the TypeScript SDK, CLI, and MCP packages must also have distinct npm names. |
+| `--auto-regen` | boolean |  | Whether Typeship should regenerate automatically when the source changes. Default: false. |
+| `--spec-patches` | object[] |  | Initial patches. Omit or pass an empty array for none. |
+| `--mcp-enabled` | boolean |  | Serve this project as a hosted MCP endpoint. Requires the MCP output and Enterprise. Default: false. |
+| `--relay-enabled` | boolean |  | Enable webhook relay sessions. Requires the CLI output and Pro. Default: false. |
 | `--config` | json |  |  |
+| `--idempotency-key` | string |  | Uniquely identifies this creation attempt. Retrying the same request with the same key returns the original response instead of creating another project. Reusing a key with different parameters returns 409. |
 
 ### typeship projects retrieve <project_id>
 
@@ -58,15 +58,18 @@ PATCH /projects/{project_id}: Update a project
 | flag | type | required | description |
 | --- | --- | --- | --- |
 | `--name` | string |  |  |
-| `--spec-url` | string |  |  |
-| `--source` | object |  | Where a project's spec lives, including optional write-only fetch credentials. |
-| `--outputs` | enum[] |  | First-class outputs; replaces the selection. Turning one off stops generating it; nothing already delivered is removed. |
-| `--packages` | object |  | Delivery packages keyed by registry ecosystem. TypeScript SDK, CLI, and MCP share npm delivery without becoming the same output. Python and Go SDKs use their own package ecosystems. |
+| `--source` | json |  |  |
+| `--outputs` | enum[] |  | Replaces the selected outputs; delivered files are not deleted. |
+| `--packages` | object |  | Independent delivery packages keyed by output. Every selected output owns its registry identity, version, destination pull request, and release lifecycle. Selected outputs must resolve to distinct repository-and-directory trees; the TypeScript SDK, CLI, and MCP packages must also have distinct npm names. |
 | `--auto-regen` | boolean |  |  |
-| `--spec-patches` | object[] |  |  |
-| `--mcp-enabled` | boolean |  | Serve this project as a hosted remote MCP endpoint. Requires the MCP output and Enterprise. |
-| `--relay-enabled` | boolean |  | Enable the webhook relay so the generated CLI's webhooks listen command works for this API's users. Requires the CLI output and Pro. |
-| `--config` | json |  | Replaces the whole config. Pass null to clear it. |
+| `--spec-patches` | object[] |  | Replaces the full patch list. Pass an empty array to clear it. |
+| `--mcp-enabled` | boolean |  | Serve this project as a hosted MCP endpoint. Requires the MCP output and Enterprise. |
+| `--relay-enabled` | boolean |  | Enable webhook relay sessions. Requires the CLI output and Pro. |
+| `--config` | json |  | Replaces the entire configuration; pass null to clear it. |
+
+### typeship projects retrieve-github-health <project_id>
+
+GET /projects/{project_id}/github: Diagnose a project's GitHub integration
 
 ### typeship projects list-generations <project_id>
 
@@ -76,7 +79,7 @@ GET /projects/{project_id}/generations: List a project's generations
 | --- | --- | --- | --- |
 | `--limit` | number |  | Maximum number of resources to return. Default: 20. |
 | `--cursor` | string |  | Opaque cursor from the preceding page's next_cursor. |
-| `--language` | typescript\|python\|go |  | Only generations for this language. |
+| `--output` | enum |  | Only generations for this output. |
 
 ### typeship projects generate <project_id>
 
@@ -96,24 +99,24 @@ GET /generations/{generation_id}/file: Fetch one file from a generation
 | --- | --- | --- | --- |
 | `--path` | string | yes | Repo-relative path inside the generated package. |
 
-## spec-versions
+## spec-revisions
 
-### typeship spec-versions list <project_id>
+### typeship spec-revisions list <project_id>
 
-GET /projects/{project_id}/spec_versions: List the specs this project has generated from
+GET /projects/{project_id}/spec_revisions: List specification revisions
 
 | flag | type | required | description |
 | --- | --- | --- | --- |
 | `--limit` | number |  | Maximum number of resources to return. Default: 20. |
 | `--cursor` | string |  | Opaque cursor from the preceding page's next_cursor. |
 
-### typeship spec-versions retrieve <spec_version_id>
+### typeship spec-revisions retrieve <spec_revision_id>
 
-GET /spec_versions/{spec_version_id}: Retrieve a spec version
+GET /spec_revisions/{spec_revision_id}: Retrieve a specification revision
 
-### typeship spec-versions retrieve-content <spec_version_id>
+### typeship spec-revisions retrieve-content <spec_revision_id>
 
-GET /spec_versions/{spec_version_id}/content: Retrieve a spec version's raw text
+GET /spec_revisions/{spec_revision_id}/content: Retrieve a specification revision's raw text
 
 ## account
 
