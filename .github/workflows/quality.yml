@@ -1,0 +1,46 @@
+name: Skills quality
+
+on:
+  pull_request:
+  push:
+    branches: [typeship/update-skills]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Skills package · validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: node .github/scripts/check-skills.mjs
+
+  propose:
+    name: Open mirrored skills pull request
+    if: github.event_name == 'push'
+    needs: quality
+    runs-on: ubuntu-slim
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Open the review when one is not already active
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          open="$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --head typeship/update-skills --json number --jq 'length')"
+          if [ "$open" = "0" ]; then
+            gh pr create \
+              --repo "$GITHUB_REPOSITORY" \
+              --base main \
+              --head typeship/update-skills \
+              --title "Update Typeship skills" \
+              --body "Updates the public skills package from the reviewed source in the private Typeship repository. This pull request is never merged automatically."
+          else
+            echo "The existing skills review now points at the latest mirrored commit."
+          fi
