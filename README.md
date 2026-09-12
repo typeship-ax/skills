@@ -13,7 +13,7 @@ Or per harness:
 - Claude Code: `/plugin marketplace add typeship-ax/skills` then `/plugin install typeship@typeship-skills`
 - Codex: `codex plugin marketplace add typeship-ax/skills`
 - Cursor: `/add-plugin typeship`
-- Any harness: `typeship init --all` installs these skills and writes the MCP config in one go
+- Optional machine setup: `typeship init --all` installs skills, writes MCP config for detected clients, and updates repository agent instructions. Use it when you want that broader setup; generation and login do not require it.
 
 | Skill | Use when |
 | --- | --- |
