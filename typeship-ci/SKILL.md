@@ -19,11 +19,11 @@ Key: create one in the console (`https://typeship.dev/console/keys`), store it a
   env: { TYPESHIP_TOKEN: ${{ secrets.TYPESHIP_TOKEN }} }
 ```
 
-This runs the same URL- or GitHub-sourced project pipeline as a spec push: it records history and a specification revision, then opens one pull request per changed destination with the release-style compatibility report and semver check. A destination whose complete generated tree already matches reports `pr_status: no_changes` and gets no commit, branch, or pull request. Do not unpack and recommit this response; that would bypass the destination workflow you configured.
+This runs the same URL- or GitHub-sourced Project pipeline as a Definition change: it records immutable Definition history, then opens one pull request per changed Target destination with the release-style compatibility report and semver check. A destination whose complete generated tree already matches reports `pr_status: no_changes` and gets no commit, branch, or pull request. Do not unpack and recommit this response; that would bypass the destination workflow you configured.
 
 ## Generate into this checkout
 
-Use the stateless command when this CI job owns the commit: `typeship generate run --spec '{"url":"..."}' --outputs '["typescript-sdk"]' --out packages/typescript`. Anonymous and Free output covers the first 25 operations; linked Free projects still retain and review the complete specification. Stateless runs do not use a linked-project slot.
+Use the stateless command when this CI job owns the commit: `typeship generate run --definition '{"url":"..."}' --target '{"generator":"typescript-sdk"}' --out packages/typescript`. Anonymous and Free Generations cover the first 25 operations; linked Free Projects still retain and diagnose the complete Definition. Stateless runs do not use a linked-Project slot.
 
 ## Spec drift gate
 

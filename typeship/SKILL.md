@@ -1,6 +1,6 @@
 ---
 name: typeship
-description: Router for typeship. Use when the user mentions typeship, wants an SDK, CLI, or MCP server generated from an OpenAPI or GraphQL spec, wants generated packages kept current with pull requests, or wants an agent connected to typeship's API. Decides which typeship skill applies and runs it.
+description: Router for typeship. Use when the user mentions typeship, wants a CLI, MCP server, or SDK generated from an OpenAPI or GraphQL spec, wants generated packages kept current with pull requests, or wants an agent connected to typeship's API. Decides which typeship skill applies and runs it.
 license: MIT
 allowed-tools: Bash(typeship *), Bash(npx typeship *), Bash(curl *), Read, Write
 metadata:
@@ -10,15 +10,15 @@ metadata:
 
 # typeship
 
-typeship turns a spec into five first-class outputs—TypeScript SDK, Python SDK, Go SDK, CLI, and MCP server—and keeps any selected combination current. Every output is an independent package and release stream. In a terminal, everything below is the `typeship` CLI (`npm install -g @typeship-ax/cli`, or `npx -y @typeship-ax/cli@latest ...`; JSON out, agent contract). In a chat client the same operations are tools on typeship's MCP server (skill `typeship-mcp-clients`); the REST API is at `https://typeship.dev/api/v1`.
+typeship turns one OpenAPI or GraphQL Definition into five first-class Targets: CLI, MCP server, TypeScript SDK, Python SDK, and Go SDK. Each Target has an independent Generation, Delivery, and release stream. In a terminal, everything below is the `typeship` CLI (`npm install -g @typeship-ax/cli`, or `npx -y @typeship-ax/cli@latest ...`; JSON out, agent contract). In a chat client the same operations are tools on typeship's MCP server (skill `typeship-mcp-clients`); the REST API is at `https://typeship.dev/api/v1`.
 
 ## Decide
 
-1. **No account, wants a package now** → `typeship generate run --spec '{"url":"..."}' --outputs '["typescript-sdk"]' --out <dir>` (first 25 operations, no key needed). If the response carries `claim.url`, give that link to the user: signed in, one click turns this run into a project that regenerates on every spec change, nothing to redo. Skill: `typeship-cli`.
-2. **Anything beyond a one-off** (a linked project, keys, or full-output generation) → `typeship init --all` once per machine. Free includes one linked project, retains and reviews its complete specification, and keeps every selected output current for the first 25 operations with the complete regeneration/PR/preview loop; Pro generates the remaining operations from that same source. Init uses `TYPESHIP_TOKEN` or a stored key when there is one; otherwise it prints a sign-in link (`{"event":"browser_approval","verification_url":...}` on stderr): give the URL to the user, wait, and a key is minted for this machine. Nobody copies a key. Pass `-k` only when the user hands you one; never paste it into a file. Skill: `typeship-cli`.
-3. **Keep outputs current** → `typeship projects create --name "..." --source '{"kind":"url","url":"https://api.example.com/openapi.json"}' --outputs '["typescript-sdk","cli","mcp"]'`, configure one package destination per output (`typeship projects update <id> --packages '{"typescript-sdk":{"destination":{"repo":"acme/typescript"}},"cli":{"destination":{"repo":"acme/cli"}},"mcp":{"destination":{"repo":"acme/mcp"}}}'`), review the first runs, then enable `--auto-regen true`; each changed output keeps one reviewed release pull request current. Skill: `typeship-cli`.
+1. **No account, wants a package now** → `typeship generate run --definition '{"url":"..."}' --target '{"generator":"cli"}' --out <dir>` (first 25 operations, no key needed). If the response carries `claim.url`, give that link to the user: signed in, one click turns the recipe into a Project with the same URL, Target, and config. Automatic generation starts off; configure Deliveries, review the first Generation, and then enable it. Skill: `typeship-cli`.
+2. **Authenticated work** → use an existing `TYPESHIP_TOKEN` or stored credential. Run `typeship auth check --format json`; if a credential is needed, run `typeship login --no-browser`, give the approval link to the user, and wait for approval. Do not ask for a key in chat. Free retains and diagnoses the complete linked Definition and generates its first 25 operations; Pro generates the remaining operations. Skill: `typeship-cli`.
+3. **Keep Targets current** → inspect `typeship projects list --all`, retrieve the candidate Project and its Definition, and run `typeship targets list <project_id> --all`. Reuse the Project for the matching source and add only missing requested Targets. If none matches, create a Project with the requested Target descriptors. Configure Deliveries, review the first Generation, then enable `typeship projects update <project_id> --auto-generate true`. Each changed Target keeps one reviewed release pull request current. Skill: `typeship-cli`.
 4. **The spec will not generate, or generates with warnings** → skill `typeship-spec-prep`.
-5. **Connect an agent client to typeship's MCP server (or a generated one)** → skill `typeship-mcp-clients`. A person present: the `/mcp-oauth` door signs them in; headless: `/mcp` with a key.
+5. **Connect an agent client to typeship's MCP server (or a generated one)** → skill `typeship-mcp-clients`. `/mcp` signs a person in or accepts a key; `/mcp/public` is the explicit anonymous surface.
 6. **Pipeline / CI** → skill `typeship-ci`.
 7. **No CLI available, REST only** → skill `typeship-api`.
 
@@ -26,7 +26,15 @@ If none of the above fits, read https://typeship.dev/agents.md and `typeship age
 
 ## Always
 
+- Keep setup within the request. `typeship init --all` installs skills, configures detected MCP clients, and writes repository agent instructions; run it only for an explicit request for that broader setup.
 - `typeship auth check --format json` before keyed work; branch on `status`.
-- Errors are one JSON envelope on stderr: `{status, issues: [{code, message}], next_steps}`. Branch on `issues[].code`. `PLAN_LIMIT` and `RATE_LIMITED` are not bugs: do what `next_steps` says, do not retry the same call. `organization_required` (signed-in MCP connections only) means the user belongs to several organizations and has not said which one agents act in: send them to https://typeship.dev/console/keys, "Signed-in agents", then retry.
-- Never edit generated files; change the spec, a spec patch, or project config and regenerate.
-- Finish by telling the user what was generated, where, from which spec, and whether it is linked to a project.
+- Errors are one JSON envelope on stderr: `{status, issues: [{code, message}], next_steps}`. Branch on `issues[].code`. `PLAN_LIMIT` and `RATE_LIMITED` are not bugs: do what `next_steps` says, do not retry the same call. `organization_required` means reconnect and choose an organization during OAuth consent. `insufficient_scope` means reconnect and approve the named OAuth capability; `forbidden` means the grant is bound to another organization or the member lacks the required role, so requesting another scope may not help.
+- Change generated API shape through the Definition, a Definition patch, or Project/Target config. For a linked repository Delivery, put package helpers, exports, dependencies, tests, and build changes on the rolling Draft; typeship preserves them through three-way integration and stops on ambiguous ownership. Stateless downloaded output has no retained baseline.
+- Finish by telling the user which Target was generated, where, from which Definition Revision, and whether it is linked to a Project.
+
+## Resolve a linked Draft conflict
+
+1. Run `typeship targets retrieve-customizations <target_id> --fields status,head_revision,input.next_generation_id,conflict_stage,conflicts,checks` and act only on the latest attempt.
+2. For a Generation conflict, fetch an incoming side with `typeship generations retrieve-file <next_generation_id> --path <path>`. For a default-sync conflict, compare the rolling Draft with the exact default commit in the inspection.
+3. Prefer a manual merge committed to the same Draft when both sides matter. With explicit user authorization, select one side using `typeship targets reset-customizations <target_id> --data '{"paths":["<path>"],"choice":"generated","expected_head_revision":"<head_revision>"}' --force`. For adoption, `reset_all: true` with `choice: current` keeps every existing conflicted path in one action.
+4. Retrieve customizations again. Do not merge while the latest status is `conflicted`, `checking`, or `checks_failed`; require `ready` and passed required checks on the same `head_revision`.
