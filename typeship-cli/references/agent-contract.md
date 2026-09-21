@@ -11,5 +11,5 @@ Source of truth: `typeship agent-guide --format json` (this file mirrors it).
 - Auth: `TYPESHIP_TOKEN` in the environment > `--token` > `typeship login` credentials file. `POST /generate` (`typeship generate run`) needs no key.
 - Base URL: `--base-url` > `TYPESHIP_BASE_URL` > `typeship config` > `https://typeship.dev/api/v1`.
 - Discovery: `typeship --help`, `typeship <resource> <command> --help`, `typeship help --json`, `typeship docs search <term>`; docs index https://typeship.dev/llms.txt.
-- Setup: `typeship init --all -k <key>`; check: `typeship auth check --live`, `typeship doctor`.
+- Authentication: check `typeship auth check --format json`; use an existing environment or stored key, or run `typeship login --no-browser` when authenticated work needs one. `typeship doctor` diagnoses setup. `typeship init --all` also installs skills, configures detected MCP clients, and writes repository instructions; use it only when that setup is requested.
 - MCP: `typeship mcp install --all` registers https://typeship.dev/mcp with every agent client found (auth env var as a reference). Cursor is skipped until it speaks MCP 2026-07-28.
