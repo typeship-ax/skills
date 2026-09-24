@@ -23,7 +23,7 @@ This runs the same URL- or GitHub-sourced Project pipeline as a Definition chang
 
 ## Generate into this checkout
 
-Use the stateless command when this CI job owns the commit: `typeship generate run --definition '{"url":"..."}' --target '{"generator":"typescript-sdk"}' --out packages/typescript`. Anonymous and Free Generations cover the first 25 operations; linked Free Projects still retain and diagnose the complete Definition. Stateless runs do not use a linked-Project slot.
+Use the one-shot command when this CI job owns the commit: `typeship generate run --definition '{"url":"..."}' --target '{"generator":"typescript-sdk"}' --out packages/typescript`. Anonymous and Free Generations cover the first 25 operations; linked Free Projects still retain and diagnose the complete Definition. One-shot runs do not use a linked-Project slot.
 
 ## Spec drift gate
 

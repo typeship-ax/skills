@@ -7,11 +7,11 @@ allowed-tools: Bash(curl *), Read, Write
 
 # typeship REST API
 
-Base URL `https://typeship.dev/api/v1`. Contract: https://typeship.dev/openapi.yaml. Reference with curl for every operation: https://typeship.dev/docs/api.md. Every JSON response includes a server-generated top-level `request_id`; JSON responses do not duplicate it in a header. Raw, text, file, bodyless, `HEAD`, and redirect responses use a `Request-Id` response header instead. Caller-supplied request IDs are ignored. Errors: `{errors: [{type, code, message, retryable, suggested_action, docs_url}], request_id}`; branch on `code` and `retryable`, follow `suggested_action`, and never branch on message. Pagination: `?limit=&cursor=` returns `{object: "list", data, has_more, next_cursor, request_id}`.
+Base URL `https://typeship.dev/api/v1`. Contract: https://typeship.dev/openapi.yaml. Reference with curl for every operation: https://typeship.dev/docs/api.md. Every response includes a server-generated `Request-Id` header. JSON responses include the same value in the top-level `request_id` field. Raw, text, file, bodyless, `HEAD`, and redirect responses carry it in the header. Caller-supplied request IDs are ignored. Errors: `{errors: [{type, code, message, retryable, suggested_action, docs_url}], request_id}`; branch on `code` and `retryable`, follow `suggested_action`, and never branch on message. Pagination: `?limit=&cursor=` returns `{object: "list", data, has_more, next_cursor, request_id}`.
 
 Auth: `Authorization: Bearer ak_...` on every call except `POST /generate`, which works anonymously (first 25 operations, 20 requests a minute per address, `RateLimit-*` headers, `limits` object in the response). A present but invalid key is a 401, never a downgrade.
 
-Send a stable `Idempotency-Key` for each logical attempt to create a Project or Target, run stateless or Project generation, update a Definition, refresh diagnostics, or apply a remediation. Repeating the same method, path, query, body, and key within 24 hours returns the original semantic response with `Idempotency-Replayed: true`; using that key for changed intent returns `idempotency_key_reused` (409). Reuse the same key across transport retries. `PATCH` and `DELETE` operations are naturally idempotent and do not take this header.
+Send a stable `Idempotency-Key` for each logical attempt to create a Project or Target, run one-shot or Project generation, update a Definition, refresh diagnostics, or apply a remediation. Repeating the same method, path, query, body, and key within 24 hours returns the original semantic response with `Idempotency-Replayed: true`; using that key for changed intent returns `idempotency_key_reused` (409). Reuse the same key across transport retries. `PATCH` and `DELETE` operations are naturally idempotent and do not take this header.
 
 ## Generate
 
@@ -23,13 +23,13 @@ curl -s https://typeship.dev/api/v1/generate \
   -d '{"definition":{"url":"https://api.example.com/openapi.json"},"target":{"generator":"python-sdk"}}'
 ```
 
-Response `{files: [{path, content}], warnings, meta, limits?, request_id}`. Inline Definition: `"definition":{"inline":"<text>"}`. `target.generator` accepts `typescript-sdk`, `python-sdk`, `go-sdk`, `cli`, or `mcp`. One stateless request produces one Target; linked Projects can select all five. `package_name` is optional for TypeScript and Python; `module_path` is the Go override; `config` is optional for every Target.
+Response `{files: [{path, content}], warnings, meta, limits?, request_id}`. Inline Definition: `"definition":{"inline":"<text>"}`. `target.generator` accepts `typescript-sdk`, `python-sdk`, `go-sdk`, `cli`, `go-cli`, or `mcp`. Each one-shot request produces one package; linked Projects can select all six. `package_name` is optional for TypeScript and Python; `module_path` is the Go module path override for the Go SDK and Go CLI outputs; `config` is optional for every Target. For `go-cli`, `go_sdk` is required: `{module_path, version, definition_digest, edition, package_name?}`, the exact paired Go SDK module and immutable version the CLI is built on.
 
 Write files: `jq -r '.files[] | @base64' | while read f; do ...; done`, or `python3 -c 'import json,sys,os; d=json.load(sys.stdin); [ (os.makedirs(os.path.dirname("sdk/"+f["path"]) or "sdk", exist_ok=True), open("sdk/"+f["path"],"w").write(f["content"])) for f in d["files"] ]'`.
 
 ## Projects and generations (key required)
 
-Free includes one stored Project and every selected Target, with unlimited automatic and manual Generation, history, destination pull requests, and preview checks. The complete linked Definition is retained and diagnosed; generated Targets include the first 25 operations. Stateless `POST /generate` remains separate and does not consume the Project slot. Pro generates the remaining operations from the same Definition and adds Projects.
+Free includes one stored Project and every selected Target, with unlimited automatic and manual Generation, history, destination pull requests, and preview checks. The complete linked Definition is retained and diagnosed; generated Targets include the first 25 operations. One-shot `POST /generate` remains separate and does not consume the Project slot. Pro generates the remaining operations from the same Definition and adds Projects.
 
 | Do | Call |
 | --- | --- |
@@ -41,10 +41,10 @@ Free includes one stored Project and every selected Target, with unlimited autom
 | One generation | `GET /generations/{id}`; large ones return `files_omitted: true` and `files_index` |
 | One file | `GET /generations/{id}/file?path=src/index.ts` |
 | Definition | `GET|PATCH /definitions/{definition_id}` |
-| Definition Revisions | `GET /definitions/{definition_id}/revisions`, `GET /definition_revisions/{id}`, `GET /definition_revisions/{id}/content`, `GET /definition_revisions/{id}/documents/{document_id}/content` |
+| Definition Revisions | `GET /definitions/{definition_id}/revisions`, `GET /definition-revisions/{id}`, `GET /definition-revisions/{id}/content`, `GET /definition-revisions/{id}/documents/{document_id}/content` |
 | Diagnostics | `GET /projects/{id}/diagnostics`; `POST` the same path to refresh without generating; `POST /projects/{id}/diagnostics/remediations` with `{diagnostic_ids}` for exact reviewed fixes |
 | Account | `GET /me` |
-| Keys | `GET /api_keys`, `DELETE /api_keys/{id}` (creation is console-only) |
+| Keys | `GET /api-keys`, `DELETE /api-keys/{id}` (creation is console-only) |
 
 Docs for any of these: fetch `https://typeship.dev/docs/typeship-api.md` (overview) or the operation in `https://typeship.dev/docs/api.md`.
 
