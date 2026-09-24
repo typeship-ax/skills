@@ -1,29 +1,36 @@
 # typeship skills
 
-Agent Skills (agentskills.io) for using typeship: generate a typed SDK, CLI, or MCP server from an OpenAPI or GraphQL spec, keep it current with pull requests, and drive typeship's own API from a coding agent. Each skill wraps the `typeship` CLI (`npm install -g @typeship-ax/cli`), which prints JSON and speaks the agent contract (`typeship agent-guide`).
+Agent skills that teach Claude Code, Codex, and other coding agents to use typeship. With them, an agent can generate a CLI, MCP server, or SDK from an OpenAPI or GraphQL spec, keep the packages current through pull requests, and operate typeship from the terminal or its API.
 
-Install into every agent on your machine:
+## Install
+
+Into every agent on your machine:
 
 ```bash
 npx skills add typeship-ax/skills
 ```
 
-Or per harness:
+As a plugin, which also connects typeship's MCP server and signs you in on first use:
 
-- Claude Code: `/plugin marketplace add typeship-ax/skills` then `/plugin install typeship@typeship-skills`
+- Claude Code: `/plugin marketplace add typeship-ax/skills`, then `/plugin install typeship@typeship-skills`
 - Codex: `codex plugin marketplace add typeship-ax/skills`
-- Cursor: `/add-plugin typeship`
-- Optional machine setup: `typeship init --all` installs skills, writes MCP config for detected clients, and updates repository agent instructions. Use it when you want that broader setup; generation and login do not require it.
+
+The skills run the `typeship` CLI. Install it with `npm install -g @typeship-ax/cli`, or run it without installing through `npx -y @typeship-ax/cli@latest`.
+
+## Skills
 
 | Skill | Use when |
 | --- | --- |
-| `typeship` | Router. Anything typeship: decides which of the others applies and runs it. |
-| `typeship-cli` | Driving typeship from the terminal: generate, projects, generations, keys, the error envelope. |
-| `typeship-api` | Calling typeship's REST API directly (no CLI): curl templates for every operation, auth, pagination, errors. |
-| `typeship-spec-prep` | Making an OpenAPI or GraphQL spec generate well: operationIds, summaries, tags, servers, security, pagination, the generator's warnings. |
-| `typeship-mcp-clients` | Connecting typeship's MCP server, or a generated one, to Claude Code, Codex, VS Code, and the rest. |
-| `typeship-ci` | Regenerating in a pipeline and committing packages. |
+| `typeship` | Any typeship task. It chooses which of the skills below applies. |
+| `typeship-cli` | Generating packages and managing Projects, Targets, and Drafts from the terminal. |
+| `typeship-mcp-clients` | Connecting typeship's MCP server, or a generated one, to an agent client. |
+| `typeship-api` | Calling typeship's REST API directly, without the CLI. |
+| `typeship-spec-prep` | A spec fails to generate, produces warnings, or produces poor names. |
+| `typeship-ci` | Running typeship in GitHub Actions or another pipeline. |
 
-Docs: https://typeship.dev/llms.txt. The runbook an agent reads first: https://typeship.dev/agents.md.
+## Learn more
 
-This repository is proposed from the `skills/` directory of the Typeship monorepo as a reviewed pull request; it is never mirrored directly to main. Edit the source there. Feedback: hello@typeship.dev.
+- Coding agent guide: https://typeship.dev/docs/guides/coding-agents
+- Documentation index for agents: https://typeship.dev/llms.txt
+
+These skills are published from typeship's source, so pull requests here are replaced by the next update. Report a problem or suggest a change in an issue, or email hello@typeship.dev.

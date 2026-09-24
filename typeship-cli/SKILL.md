@@ -1,84 +1,128 @@
 ---
 name: typeship-cli
-description: Drive typeship from the terminal with the typeship CLI. Use to generate a Target from a Definition, create and configure Projects, trigger Generations, read Diagnostics and Definition Revisions, manage API keys, and interpret the CLI's JSON error envelope. Prefer this over the MCP server in terminals.
+description: Drive typeship from the terminal with the typeship CLI. Use to generate a package from a spec, create and configure Projects and Targets, run Generations, resolve Draft conflicts, read Diagnostics and Definition Revisions, and interpret the CLI's JSON error envelope. Prefer this over the MCP server in a terminal.
 license: MIT
-allowed-tools: Bash(typeship *), Bash(npx typeship *), Read, Write
+allowed-tools: Bash(typeship *), Bash(npx -y @typeship-ax/cli@latest *), Read, Write
 ---
 
 # typeship CLI
 
-`npm install -g @typeship-ax/cli` (or `npx -y @typeship-ax/cli@latest ...`). JSON on stdout, one JSON envelope on stderr for errors, exit 0/1/2. Full contract: `typeship agent-guide --format json`; command surface as data: `typeship help --json`. Reference: `references/commands.md`, `references/agent-contract.md`.
+Install with `npm install -g @typeship-ax/cli`, or run `npx -y @typeship-ax/cli@latest <command>` without installing.
 
-## First
+- Results are JSON on stdout. Errors are one JSON envelope on stderr.
+- Exit codes: 0 success, 1 the request failed, 2 a usage error or a required confirmation.
+- `typeship <resource> <command> --help` shows every flag. `references/commands.md` lists every command, and `references/agent-contract.md` summarizes the agent contract.
+
+## Start
 
 ```bash
-typeship auth check --format json     # {status: ok|action_required, source, next_steps}
-# Only if authenticated work needs a credential:
-typeship login --no-browser           # give the approval link to the user
+typeship auth check --format json     # {status: ok | action_required, source, next_steps}
+typeship login --no-browser           # only when account work needs a credential; give the link to the user
 ```
 
-Use an existing `TYPESHIP_TOKEN` or stored credential directly. Anonymous generation does not need login. `typeship init --all` also installs skills, configures every detected MCP client, and writes repository agent instructions; reserve it for an explicit request to set up those tools.
+An existing `TYPESHIP_TOKEN` or stored login works without `login`. Anonymous generation needs neither.
 
-## Generate
-
-Anonymous works (first 25 operations, 20/min per address). Eligible URL runs return a claim link to save the recipe as a Project within seven days. With a key the plan's limits apply.
+## Generate one package
 
 ```bash
-typeship generate run --definition '{"url":"https://api.example.com/openapi.json"}' --target '{"generator":"typescript-sdk"}' --out generated/
-typeship generate run --definition "{\"inline\":$(jq -Rs . < openapi.yaml)}" --target '{"generator":"python-sdk"}' --out generated/
-typeship generate run --definition '{"url":"https://api.example.com/openapi.json"}' --target '{"generator":"cli"}' --out generated-cli/
-typeship generate run --definition '{"url":"https://api.example.com/openapi.json"}' --target '{"generator":"mcp"}' --out generated-mcp/
+typeship generate run \
+  --definition '{"url":"https://typeship.dev/examples/petstore/openapi.yaml"}' \
+  --target '{"generator":"cli"}' \
+  --out petstore-cli/
 ```
 
-Each one-shot run writes one package selected by its `--target` descriptor. Use a linked Project when several independently delivered Targets should stay current together. `--out` writes the files and prints `{meta, warnings, limits?, out: {written, dir}}`. Without `--out`, the whole response prints (large). If `limits` is present, read `generated_operations`, `total_operations`, `omitted_operations`, and `reason`. When anything was omitted, report “generated N of M operations”; a linked Project retains the complete Definition even though its Free Generation is partial. For `reason: "anonymous"`, offer authentication at `signup_url` without promising that a free account lifts the cap. For `reason: "free_plan"`, a key is already present: send the user to `upgrade_url`, not back to login or key setup.
+- `--target` generators: `cli`, `go-cli`, `mcp`, `typescript-sdk`, `python-sdk`, `go-sdk`. Each run produces one package.
+- For a local file, pass the text inline: `--definition "{\"inline\":$(jq -Rs . < openapi.yaml)}"`.
+- `--out` writes the files and prints `{meta, warnings, limits?, out: {written, dir}}`. Without `--out`, the full response prints, which can be large.
+- Anonymous runs allow 20 requests a minute per network address.
 
-## Projects (keyed)
+When the result includes `limits`, `omitted_operations` lists the operations that were not generated. Report "generated N of M operations" using `generated_operations` and `total_operations`, then act on `reason`:
 
-Free includes one stored Project and every selected Target. The complete Definition and its revisions are retained, and API change review plus Diagnostics cover the full contract; each generated Target includes the first 25 operations. That Project still gets on-demand and automatic Generation, history, destination pull requests, and preview checks without a run quota. One-shot `generate run` never consumes the Project slot. Pro generates the remaining operations from the same linked Definition and adds Projects; each selected Target is a billing unit on Pro.
+- `reason: "anonymous"`: offer sign-up at `signup_url`. Do not promise that a free account generates every operation.
+- `reason: "free_plan"`: the user is already signed in. Send them to `upgrade_url`, not back to login.
 
-Before creating resources, run `typeship projects list --all`, retrieve a candidate Project and its Definition, and run `typeship targets list <project_id> --all`. Match the source URL or repository and entrypoint. Reuse matching Projects and Targets; add only missing requested outputs. Retrieve current config and Deliveries before replacing them.
+An anonymous run from a URL may include `claim.url`, which lets a signed-in user save the run as a Project within seven days.
+
+## Projects and Targets
+
+A Project holds one Definition and its Targets. Each Target generates one package and can deliver it to a repository as a pull request. Plans limit Projects and generated operations; see https://typeship.dev/docs/reference/limits.md.
+
+Reuse before creating. Run `typeship projects list --all`, retrieve any Project whose Definition has the same source URL or repository path, and run `typeship targets list <project_id> --all`. Add only the Targets that are missing.
 
 ```bash
-typeship projects create --name "Acme API" --definition '{"source":{"kind":"url","url":"https://api.example.com/openapi.json"}}' --targets '[{"name":"Acme CLI","generator":"cli"}]'
-typeship projects generate <project_id>          # one Generation per active Target (large: redirect to a file)
+typeship projects create --name "Petstore" \
+  --definition '{"source":{"kind":"url","url":"https://typeship.dev/examples/petstore/openapi.yaml"}}' \
+  --targets '[{"name":"Petstore CLI","generator":"cli"}]'
+typeship targets create <project_id> --name "Petstore SDK" --definition-id <definition_id> --generator typescript-sdk
+typeship targets update <target_id> --deliveries '[{"kind":"repository","repository":{"provider":"github","identifier":"<owner>/<repo>"}}]'
+typeship projects generate <project_id>          # waits for every Target; redirect large output to a file
+typeship projects update <project_id> --auto-generate true
+```
+
+- For a spec in GitHub, use `{"source":{"kind":"repository","repository":{"provider":"github","identifier":"<owner>/<repo>"},"path":"openapi.yaml"}}`. The Project regenerates when any file in the spec changes.
+- Automatic generation starts off. Turn it on after the user reviews the first Generation and its pull request.
+- `projects generate` opens a pull request only when the generated package differs from the repository. Otherwise the Generation reports `pr_status: no_changes`.
+- Retrieve a resource before changing it. Updates replace whole objects and arrays, such as `deliveries` or `config`, so merge your change into the current value.
+
+Reading results and history:
+
+```bash
 typeship projects list-generations <project_id>
 typeship generations retrieve <generation_id>
 typeship generations retrieve-file <generation_id> --path src/index.ts
+typeship targets list-releases <target_id>
 typeship definitions retrieve <definition_id>
-typeship definitions update <definition_id> --patches '[...]' --diagnostic-policy '{...}'
 typeship definition-revisions list <definition_id>
 typeship definition-revisions retrieve-content <definition_revision_id>
-typeship targets list <project_id>
-typeship targets create <project_id> --name "Acme Internal SDK" --definition-id <definition_id> --generator typescript-sdk
-typeship targets update <target_id> --deliveries '[{"kind":"repository","repository":{"provider":"github","identifier":"acme/internal-typescript"}}]'
-typeship targets list-releases <target_id>
-typeship projects retrieve-diagnostics <project_id>
-typeship projects refresh-diagnostics <project_id>
-typeship projects delete <project_id> --force    # DELETE needs --force; without it: CONFIRMATION_REQUIRED
 ```
 
-Automatic generation starts disabled. After reviewing the first Generation and destination pull request, enable it with `typeship projects update <project_id> --auto-generate true`.
+Deleting needs `--force`. Confirm with the user first: `typeship projects delete <project_id> --force`.
 
-`projects generate` opens a pull request only when the complete generated tree differs from the destination. An already-current destination returns `meta.pr_status: "no_changes"` without creating a commit or branch.
+## Resolve a Draft conflict
 
-`typeship projects create --help` lists every field. GitHub-sourced Projects (`--definition '{"source":{"kind":"repository","repository":{"provider":"github","identifier":"acme/api"},"path":"openapi.yaml"}}'`) regenerate when any document in the resolved Definition graph changes and can also be forced on demand with `typeship projects generate`.
+A Target delivered to a repository keeps one Draft pull request. When a new Generation, the default branch, or an earlier Draft changes a file the user also changed, the Draft stops at a conflict until someone decides.
 
-## Read the envelope
+1. Run `typeship targets retrieve-draft <target_id>` and act on `status`:
+
+   | `status` | Next step |
+   | --- | --- |
+   | `conflicted` | Continue with step 2. |
+   | `needs_generation` | Run `typeship projects generate <project_id>`. |
+   | `generating`, `branch_changed`, `checking` | Retrieve the Draft again. |
+   | `history_rewritten` | Ask the user to approve history recovery. |
+   | `failed` | Inspect the checks, fix the package, and push to the Draft. |
+   | `ready` | The pull request can be merged, with the user's approval. |
+
+   Note `head_revision`. Every decision applies to that revision.
+2. Run `typeship targets list-draft-files <target_id> --filter conflicted`. Each file lists `conflict.kind`, `conflict.source`, and the available `sides`. Read a side with `typeship targets retrieve-draft-file-content <target_id> --path <path> --side incoming`. Files over 24 KiB arrive in chunks; pass `next_cursor` to continue.
+3. Preview the decisions, then save them without `dry_run` once the user approves:
+
+   ```bash
+   typeship targets resolve-draft-conflicts <target_id> --force \
+     --data '{"expected_head_revision":"<head_revision>","dry_run":true,"resolutions":[{"path":"<path>","keep":"repository"}]}'
+   ```
+
+   `keep` is `repository`, `incoming`, or `content`. With `content`, send the merged text in `content` and the file `mode`. `content: null` deletes the file.
+4. When `remaining_conflicts` is 0, run `typeship projects generate <project_id>`. Saved decisions apply only then. The next merge stage can report new conflicts, so start again at step 1.
+
+Committing to the Draft does not resolve a conflict. To drop customizations that do not conflict, run `typeship targets discard-draft-customizations <target_id>` with explicit paths. A listed file that exists only in the Draft is deleted.
+
+## Error codes
 
 ```json
-{"status":"action_required","issues":[{"code":"NO_AUTH","message":"..."}],"docs_url":"https://typeship.dev","next_steps":["..."],"detail":{"status":401,"body":{...}}}
+{"status":"action_required","issues":[{"code":"NO_AUTH","message":"..."}],"next_steps":["..."]}
 ```
 
-| code | do |
+| `code` | Do |
 | --- | --- |
-| `NO_AUTH` | set `TYPESHIP_TOKEN` or `typeship login --token`; anonymous `generate run` still works |
-| `AUTH_INVALID` | the key is wrong or revoked; ask for a new one |
-| `PLAN_LIMIT` | 402; `next_steps` has the upgrade URL; do not retry |
-| `RATE_LIMITED` | wait the seconds named; do not loop |
-| `SPEC_INVALID` | the spec cannot be used; switch to `typeship-spec-prep` |
-| `CONFIRMATION_REQUIRED` | a delete needs `--force`; confirm with the user first |
-| `NETWORK_ERROR` | check base URL and network; retry once |
+| `NO_AUTH` | Set `TYPESHIP_TOKEN` or run `typeship login --no-browser`. Anonymous `generate run` still works. |
+| `AUTH_INVALID` | The key is wrong or revoked. Ask the user for a new one. |
+| `PLAN_LIMIT` | The plan does not allow this. `next_steps` has the upgrade link. Do not retry. |
+| `RATE_LIMITED` | Wait the number of seconds named, then retry once. |
+| `SPEC_INVALID` | The spec cannot be used. Switch to `typeship-spec-prep`. |
+| `CONFIRMATION_REQUIRED` | The command needs `--force`. Confirm with the user first. |
+| `NETWORK_ERROR` | Check the network and base URL, then retry once. |
 
-## Docs from the terminal
+## Documentation
 
-`typeship docs search "<term>"`, `typeship docs read <page>`, `typeship docs <resource> <command>`.
+`typeship docs search "<term>"` searches the docs. `typeship docs read <page>` prints a page, and `typeship docs <resource> <command>` prints one command's reference.
