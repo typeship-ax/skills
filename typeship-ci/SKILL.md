@@ -1,34 +1,44 @@
 ---
 name: typeship-ci
-description: Run typeship in a pipeline - trigger a linked project's normal destination pull request, generate ad hoc from a spec into a checkout, or gate a release on spec drift with a generated CLI's --validate. Use when the user wants typeship in GitHub Actions or another CI system.
+description: Run typeship in a pipeline - trigger a linked Project's normal pull requests, or generate a package into the checkout the job commits. Use when the user wants typeship in GitHub Actions or another CI system.
 license: MIT
 allowed-tools: Bash(typeship *), Read, Write
 ---
 
 # typeship in CI
 
-Linked projects with a destination regenerate on their own and open pull requests, so most teams need no CI for generation. Use CI to commit packages alongside an app, build them into an image, or gate a release. Full page: https://typeship.dev/docs/guides/ci.md.
+A Project that delivers to repositories regenerates when its spec changes and opens the pull requests itself, so most teams do not need CI for generation. Use CI to trigger that on your own schedule, or to generate a package into the repository the job commits to. Full guide: https://typeship.dev/docs/guides/ci.md.
 
-Key: create one in the console (`https://typeship.dev/console/keys`), store it as the secret `TYPESHIP_TOKEN`. The CLI reads it from the environment; no login step.
+## Authenticate
 
-## Trigger the project's normal pull request
+Create an API key in the console at https://typeship.dev/console/keys and store it as the secret `TYPESHIP_TOKEN`. The CLI reads it from the environment, so the job needs no login step.
+
+## Trigger a Project's pull requests
 
 ```yaml
 - run: npm install -g @typeship-ax/cli
-- run: typeship projects generate prj_...
-  env: { TYPESHIP_TOKEN: ${{ secrets.TYPESHIP_TOKEN }} }
+- run: typeship projects generate <project_id>
+  env:
+    TYPESHIP_TOKEN: ${{ secrets.TYPESHIP_TOKEN }}
 ```
 
-This runs the same URL- or GitHub-sourced Project pipeline as a Definition change: it records immutable Definition history, then opens one pull request per changed Target destination with the release-style compatibility report and semver check. A destination whose complete generated tree already matches reports `pr_status: no_changes` and gets no commit, branch, or pull request. Do not unpack and recommit this response; that would bypass the destination workflow you configured.
+This runs the same pipeline as a spec change. It records the Definition Revision, then opens or updates one pull request per changed Target, with a compatibility report and version check. The command waits for every Target and reports each result. A Target whose repository already matches reports `pr_status: no_changes` and gets no commit or pull request.
+
+Do not write this command's output into the checkout. The pull requests already deliver the packages, and a second copy bypasses their review.
 
 ## Generate into this checkout
 
-Use the one-shot command when this CI job owns the commit: `typeship generate run --definition '{"url":"..."}' --target '{"generator":"typescript-sdk"}' --out packages/typescript`. Anonymous and Free Generations cover the first 25 operations; linked Free Projects still retain and diagnose the complete Definition. One-shot runs do not use a linked-Project slot.
+When the job itself owns the commit, generate one package with `--out`:
 
-## Spec drift gate
+```bash
+typeship generate run \
+  --definition '{"url":"<spec-url>"}' \
+  --target '{"generator":"typescript-sdk"}' \
+  --out packages/typescript
+```
 
-A generated CLI's `--validate` checks live responses against the spec: `node packages/typescript/dist/cli.js accounts list --validate --limit 5`.
+Plans limit how many operations are generated. Check `limits` in the output; see https://typeship.dev/docs/reference/limits.md.
 
-## Envelope in logs
+## Failures
 
-Failures are one JSON envelope on stderr with `issues[].code`; exit 1 for a failed request, 2 for usage. Fail the job on non-zero and print stderr.
+Failures print one JSON envelope on stderr with `issues[].code`. The exit code is 1 for a failed request and 2 for a usage error. Fail the job on any non-zero exit and print stderr to the log.
