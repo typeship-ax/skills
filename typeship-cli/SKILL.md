@@ -21,7 +21,7 @@ Use an existing `TYPESHIP_TOKEN` or stored credential directly. Anonymous genera
 
 ## Generate
 
-Anonymous works (first 25 operations, 20/min per address; Definition contents and generated files are not retained). URL runs keep a seven-day claim recipe and return its link. With a key the plan's limits apply.
+Anonymous works (first 25 operations, 20/min per address). Eligible URL runs return a claim link to save the recipe as a Project within seven days. With a key the plan's limits apply.
 
 ```bash
 typeship generate run --definition '{"url":"https://api.example.com/openapi.json"}' --target '{"generator":"typescript-sdk"}' --out generated/
@@ -30,11 +30,11 @@ typeship generate run --definition '{"url":"https://api.example.com/openapi.json
 typeship generate run --definition '{"url":"https://api.example.com/openapi.json"}' --target '{"generator":"mcp"}' --out generated-mcp/
 ```
 
-Each stateless run accepts exactly one Target and writes one focused package. Use a linked Project when several independently delivered Targets should stay current together. `--out` writes the files and prints `{meta, warnings, limits?, out: {written, dir}}`. Without `--out`, the whole response prints (large). If `limits` is present, read `generated_operations`, `total_operations`, `omitted_operations`, and `reason`. When anything was omitted, report “generated N of M operations”; a linked Project retains the complete Definition even though its Free Generation is partial. For `reason: "anonymous"`, offer authentication at `signup_url` without promising that a free account lifts the cap. For `reason: "free_plan"`, a key is already present: send the user to `upgrade_url`, not back to login or key setup.
+Each one-shot run writes one package selected by its `--target` descriptor. Use a linked Project when several independently delivered Targets should stay current together. `--out` writes the files and prints `{meta, warnings, limits?, out: {written, dir}}`. Without `--out`, the whole response prints (large). If `limits` is present, read `generated_operations`, `total_operations`, `omitted_operations`, and `reason`. When anything was omitted, report “generated N of M operations”; a linked Project retains the complete Definition even though its Free Generation is partial. For `reason: "anonymous"`, offer authentication at `signup_url` without promising that a free account lifts the cap. For `reason: "free_plan"`, a key is already present: send the user to `upgrade_url`, not back to login or key setup.
 
 ## Projects (keyed)
 
-Free includes one stored Project and every selected Target. The complete Definition and its revisions are retained, and API change review plus Diagnostics cover the full contract; each generated Target includes the first 25 operations. That Project still gets on-demand and automatic Generation, history, destination pull requests, and preview checks without a run quota. Stateless `generate run` never consumes the Project slot. Pro generates the remaining operations from the same linked Definition and adds Projects; each selected Target is a billing unit on Pro.
+Free includes one stored Project and every selected Target. The complete Definition and its revisions are retained, and API change review plus Diagnostics cover the full contract; each generated Target includes the first 25 operations. That Project still gets on-demand and automatic Generation, history, destination pull requests, and preview checks without a run quota. One-shot `generate run` never consumes the Project slot. Pro generates the remaining operations from the same linked Definition and adds Projects; each selected Target is a billing unit on Pro.
 
 Before creating resources, run `typeship projects list --all`, retrieve a candidate Project and its Definition, and run `typeship targets list <project_id> --all`. Match the source URL or repository and entrypoint. Reuse matching Projects and Targets; add only missing requested outputs. Retrieve current config and Deliveries before replacing them.
 
