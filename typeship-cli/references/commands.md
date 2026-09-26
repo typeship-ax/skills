@@ -2,132 +2,71 @@
 
 Generated from `typeship help --json` by scripts/check-skills.mts; do not edit. `typeship <resource> <command> --help` prints the same for one command.
 
-## generate
-
-### typeship generate run
-
-POST /generate: Generate one package from a Definition
-
-| flag | type | required | description |
-| --- | --- | --- | --- |
-| `--definition` | json | yes | A Definition for one-shot generation, provided as exactly one URL or inline entrypoint. |
-| `--target` | object | yes | One-shot generator descriptor; no persisted Target is created. |
-| `--package-name` | string |  | npm package or Python distribution override. Valid only for the TypeScript and Python SDK targets. |
-| `--module-path` | string |  | Go module path override for the generated artifact's own module. Valid only for the Go SDK and Go CLI outputs. Linked projects derive this from the Go destination repository by default. |
-| `--go-sdk` | object |  | The exact paired Go SDK a go-cli generation is built on. Required when target.generator is go-cli and rejected otherwise. The descriptor is closed and immutable, because a CLI that pins a range or a branch pins nothing. |
-| `--config` | object |  | Everything Typeship needs beyond the Definition, in one object: generation customization (globals, retries, pagination, readme) and how the generated tooling behaves (cli, mcp, package, docs_url). Plain configuration. Typeship never requires vendor extensions inside the Definition itself. One-shot generation also accepts GraphQL settings here; stored projects keep those settings on their Definition. |
-| `--idempotency-key` | string |  | Identifies one logical write for 24 hours. The key is scoped to the authenticated account and operation; account-less generation uses a hashed network identity. Retrying the same method, path, query, If-Match header, and JSON body replays the original response. Reusing the key with changed intent returns 409. After expiry the key starts a new write. |
-
-### typeship generate download-package
-
-GET /generate/download: Download a generated package
-
-| flag | type | required | description |
-| --- | --- | --- | --- |
-| `--query-token` | string | yes | Private download token from download.url in the generation result. |
-
 ## projects
-
-### typeship projects list
-
-GET /projects: List projects
-
-| flag | type | required | description |
-| --- | --- | --- | --- |
-| `--limit` | number |  | Maximum number of resources to return. Omit for 20; otherwise supply base-10 digits representing an integer from 1 to 100. Empty, malformed, or out-of-range values return 400 invalid_request. List query parameters must appear only once; unrecognized parameters also return 400. Default: 20. |
-| `--cursor` | string |  | Opaque cursor from the preceding page's next_cursor. Valid only for the same account, operation, filters, and ordering that issued it. Omit to start at the first page. Empty, malformed, or repeated cursors return 400 invalid_request. The page limit may change between requests. |
 
 ### typeship projects create
 
-POST /projects: Create a project
+POST /projects: Create a Project
 
 | flag | type | required | description |
 | --- | --- | --- | --- |
 | `--name` | string | yes |  |
-| `--definition` | object | yes |  |
+| `--spec` | object | yes |  |
 | `--targets` | object[] | yes | Initial first-class Targets. More than one may use the same generator with different identities or Deliveries. |
-| `--auto-generate` | boolean |  | Whether Typeship should regenerate automatically when the source changes. Default: false. |
-| `--relay-enabled` | boolean |  | Enable webhook relay sessions. Requires the CLI target and Pro. Default: false. |
-| `--config` | json |  | Shared defaults inherited by every Target. GraphQL settings belong in definition.graphql. |
-| `--idempotency-key` | string |  | Identifies one logical write for 24 hours. The key is scoped to the authenticated account and operation; account-less generation uses a hashed network identity. Retrying the same method, path, query, If-Match header, and JSON body replays the original response. Reusing the key with changed intent returns 409. After expiry the key starts a new write. |
+| `--auto-generate` | boolean |  | Whether Typeship should regenerate automatically when the source or saved configuration changes. Default: true. |
+| `--config` | json |  | Shared defaults inherited by every Target. GraphQL settings belong in spec.graphql. |
+| `--idempotency-key` | string |  | Identifies one logical write for 24 hours. The key is scoped to the authenticated organization and operation; generation without an organization uses a hashed network identity. Retrying the same method, path, query, If-Match header, and JSON body replays the original response. Reusing the key with changed intent returns 409. After expiry the key starts a new write. |
 
-### typeship projects retrieve <project_id>
+### typeship projects list
 
-GET /projects/{project_id}: Retrieve a project
-
-### typeship projects delete <project_id>
-
-DELETE /projects/{project_id}: Delete a project (destructive: needs --force)
+GET /projects: List Projects
 
 | flag | type | required | description |
 | --- | --- | --- | --- |
-| `--if-match` | string |  | ETag from a preceding response. The write applies only if the resource still has that version; otherwise it returns 412 precondition_failed without changes. Omit to write the current version. See https://typeship.dev/docs/typeship-api#conditional-writes. |
+| `--limit` | number |  | Maximum number of resources to return. Omit for 20; otherwise supply base-10 digits representing an integer from 1 to 100. Empty, malformed, or out-of-range values return 400 input_invalid. List query parameters must appear only once; repeated or unrecognized parameters return 400 query_param_invalid. Default: 20. |
+| `--cursor` | string |  | Opaque cursor from the preceding page's next_cursor. Valid only for the same organization, operation, filters, and ordering that issued it. Omit to start at the first page. Empty or malformed cursors, and cursors issued for different filters, return 400 cursor_invalid; start again from the first page. Repeated cursors return 400 query_param_invalid. The page limit may change between requests. |
+
+### typeship projects get <project_id>
+
+GET /projects/{project_id}: Get a Project
 
 ### typeship projects update <project_id>
 
-PATCH /projects/{project_id}: Update a project
+PATCH /projects/{project_id}: Update a Project
 
 | flag | type | required | description |
 | --- | --- | --- | --- |
 | `--name` | string |  |  |
 | `--auto-generate` | boolean |  |  |
-| `--relay-enabled` | boolean |  | Enable webhook relay sessions. Requires the CLI target and Pro. |
 | `--config` | json |  | Replaces the Project's shared Target defaults. Send null to clear them. |
 | `--if-match` | string |  | ETag from a preceding response. The write applies only if the resource still has that version; otherwise it returns 412 precondition_failed without changes. Omit to write the current version. See https://typeship.dev/docs/typeship-api#conditional-writes. |
 
-### typeship projects retrieve-diagnostics <project_id>
+### typeship projects delete <project_id>
 
-GET /projects/{project_id}/diagnostics: Analyze a project's latest Definition Revision
-
-### typeship projects refresh-diagnostics <project_id>
-
-POST /projects/{project_id}/diagnostics: Refresh a project's Diagnostics from its configured source
+DELETE /projects/{project_id}: Delete a Project (destructive: needs --force)
 
 | flag | type | required | description |
 | --- | --- | --- | --- |
-| `--idempotency-key` | string |  | Identifies one logical write for 24 hours. The key is scoped to the authenticated account and operation; account-less generation uses a hashed network identity. Retrying the same method, path, query, If-Match header, and JSON body replays the original response. Reusing the key with changed intent returns 409. After expiry the key starts a new write. |
-
-### typeship projects remediate-diagnostics <project_id>
-
-POST /projects/{project_id}/diagnostics/remediations: Apply exact, reviewed diagnostic remediations
-
-| flag | type | required | description |
-| --- | --- | --- | --- |
-| `--diagnostic-ids` | string[] | yes | Stable IDs of current diagnostics whose exact patches should be reviewed and applied. |
-| `--idempotency-key` | string |  | Identifies one logical write for 24 hours. The key is scoped to the authenticated account and operation; account-less generation uses a hashed network identity. Retrying the same method, path, query, If-Match header, and JSON body replays the original response. Reusing the key with changed intent returns 409. After expiry the key starts a new write. |
-
-### typeship projects retrieve-integration-health <project_id>
-
-GET /projects/{project_id}/integration-health: Diagnose a project's repository integrations
-
-### typeship projects list-generations <project_id>
-
-GET /projects/{project_id}/generations: List a project's generations
-
-| flag | type | required | description |
-| --- | --- | --- | --- |
-| `--limit` | number |  | Maximum number of resources to return. Omit for 20; otherwise supply base-10 digits representing an integer from 1 to 100. Empty, malformed, or out-of-range values return 400 invalid_request. List query parameters must appear only once; unrecognized parameters also return 400. Default: 20. |
-| `--cursor` | string |  | Opaque cursor from the preceding page's next_cursor. Valid only for the same account, operation, filters, and ordering that issued it. Omit to start at the first page. Empty, malformed, or repeated cursors return 400 invalid_request. The page limit may change between requests. |
-| `--target-id` | string |  | Only generations for this persisted Target. |
+| `--if-match` | string |  | ETag from a preceding response. The write applies only if the resource still has that version; otherwise it returns 412 precondition_failed without changes. Omit to write the current version. See https://typeship.dev/docs/typeship-api#conditional-writes. |
 
 ### typeship projects generate <project_id>
 
-POST /projects/{project_id}/generations: Start generation for active Targets
+POST /projects/{project_id}/generate: Generate a Project's Targets
 
 | flag | type | required | description |
 | --- | --- | --- | --- |
-| `--target-id` | string |  | Stable identifier for one configured generated product. |
-| `--idempotency-key` | string |  | Identifies one logical write for 24 hours. The key is scoped to the authenticated account and operation; account-less generation uses a hashed network identity. Retrying the same method, path, query, If-Match header, and JSON body replays the original response. Reusing the key with changed intent returns 409. After expiry the key starts a new write. |
+| `--target-id` | string |  | Stable identifier for one configured generated product. Accepts an ID or an exact name (resolved via targets_list). IDs come from targets_list. |
+| `--idempotency-key` | string |  | Identifies one logical write for 24 hours. The key is scoped to the authenticated organization and operation; generation without an organization uses a hashed network identity. Retrying the same method, path, query, If-Match header, and JSON body replays the original response. Reusing the key with changed intent returns 409. After expiry the key starts a new write. |
 
-## definitions
+## specs
 
-### typeship definitions retrieve <definition_id>
+### typeship specs get <spec_id>
 
-GET /definitions/{definition_id}: Retrieve a Definition
+GET /specs/{spec_id}: Get a Spec
 
-### typeship definitions update <definition_id>
+### typeship specs update <spec_id>
 
-PATCH /definitions/{definition_id}: Update and resolve a Definition
+PATCH /specs/{spec_id}: Update a Spec
 
 | flag | type | required | description |
 | --- | --- | --- | --- |
@@ -136,212 +75,294 @@ PATCH /definitions/{definition_id}: Update and resolve a Definition
 | `--graphql` | json |  | Replace all GraphQL settings. Null or an empty object clears them. |
 | `--diagnostic-policy` | object |  | Source pull-request enforcement threshold, new-versus-complete baseline, and explicitly reviewed rule or location exceptions. |
 | `--if-match` | string |  | ETag from a preceding response. The write applies only if the resource still has that version; otherwise it returns 412 precondition_failed without changes. Omit to write the current version. See https://typeship.dev/docs/typeship-api#conditional-writes. |
-| `--idempotency-key` | string |  | Identifies one logical write for 24 hours. The key is scoped to the authenticated account and operation; account-less generation uses a hashed network identity. Retrying the same method, path, query, If-Match header, and JSON body replays the original response. Reusing the key with changed intent returns 409. After expiry the key starts a new write. |
+| `--idempotency-key` | string |  | Identifies one logical write for 24 hours. The key is scoped to the authenticated organization and operation; generation without an organization uses a hashed network identity. Retrying the same method, path, query, If-Match header, and JSON body replays the original response. Reusing the key with changed intent returns 409. After expiry the key starts a new write. |
+
+### typeship specs refresh <spec_id>
+
+POST /specs/{spec_id}/refresh: Refresh a Spec
+
+| flag | type | required | description |
+| --- | --- | --- | --- |
+| `--idempotency-key` | string |  | Identifies one logical write for 24 hours. The key is scoped to the authenticated organization and operation; generation without an organization uses a hashed network identity. Retrying the same method, path, query, If-Match header, and JSON body replays the original response. Reusing the key with changed intent returns 409. After expiry the key starts a new write. |
+
+## spec-revisions
+
+### typeship spec-revisions list
+
+GET /spec-revisions: List Spec Revisions
+
+| flag | type | required | description |
+| --- | --- | --- | --- |
+| `--limit` | number |  | Maximum number of resources to return. Omit for 20; otherwise supply base-10 digits representing an integer from 1 to 100. Empty, malformed, or out-of-range values return 400 input_invalid. List query parameters must appear only once; repeated or unrecognized parameters return 400 query_param_invalid. Default: 20. |
+| `--cursor` | string |  | Opaque cursor from the preceding page's next_cursor. Valid only for the same organization, operation, filters, and ordering that issued it. Omit to start at the first page. Empty or malformed cursors, and cursors issued for different filters, return 400 cursor_invalid; start again from the first page. Repeated cursors return 400 query_param_invalid. The page limit may change between requests. |
+| `--spec-id` | string |  | Only revisions of this Spec. |
+
+### typeship spec-revisions get <spec_revision_id>
+
+GET /spec-revisions/{spec_revision_id}: Get a Spec Revision
+
+| flag | type | required | description |
+| --- | --- | --- | --- |
+| `--include` | diagnostics |  | Add related data to the response. `diagnostics` adds the `diagnostics` and `patch_diagnostics` arrays. |
+| `--filter` | blocking\|introduced |  | Narrow the included Diagnostics to matching locations. Requires include=diagnostics. blocking: locations that fail the Diagnostic policy. introduced: locations new since the baseline. A Diagnostic with no matching location is omitted. diagnostic_summary always describes the complete revision. |
+
+### typeship spec-revisions list-files <spec_revision_id>
+
+GET /spec-revisions/{spec_revision_id}/files: List a Spec Revision's files
+
+| flag | type | required | description |
+| --- | --- | --- | --- |
+| `--limit` | number |  | Maximum number of resources to return. Omit for 20; otherwise supply base-10 digits representing an integer from 1 to 100. Empty, malformed, or out-of-range values return 400 input_invalid. List query parameters must appear only once; repeated or unrecognized parameters return 400 query_param_invalid. Default: 20. |
+| `--cursor` | string |  | Opaque cursor from the preceding page's next_cursor. Valid only for the same organization, operation, filters, and ordering that issued it. Omit to start at the first page. Empty or malformed cursors, and cursors issued for different filters, return 400 cursor_invalid; start again from the first page. Repeated cursors return 400 query_param_invalid. The page limit may change between requests. |
 
 ## targets
 
-### typeship targets list <project_id>
+### typeship targets create
 
-GET /projects/{project_id}/targets: List a project's Targets
-
-| flag | type | required | description |
-| --- | --- | --- | --- |
-| `--limit` | number |  | Maximum number of resources to return. Omit for 20; otherwise supply base-10 digits representing an integer from 1 to 100. Empty, malformed, or out-of-range values return 400 invalid_request. List query parameters must appear only once; unrecognized parameters also return 400. Default: 20. |
-| `--cursor` | string |  | Opaque cursor from the preceding page's next_cursor. Valid only for the same account, operation, filters, and ordering that issued it. Omit to start at the first page. Empty, malformed, or repeated cursors return 400 invalid_request. The page limit may change between requests. |
-
-### typeship targets create <project_id>
-
-POST /projects/{project_id}/targets: Create an independently configured Target
+POST /targets: Create a Target
 
 | flag | type | required | description |
 | --- | --- | --- | --- |
+| `--project-id` | string | yes | Unique identifier for a project. Accepts an ID or an exact name (resolved via projects_list). IDs come from projects_list. |
 | `--name` | string | yes |  |
-| `--definition-id` | string | yes | Unique identifier for a project's logical API Definition. |
-| `--generator` | enum | yes | Generator implementation selected by a Target. This is configuration, not identity; several Targets may use the same generator. cli is the TypeScript CLI; go-cli is the native Go CLI, a distinct product that imports one exact paired Go SDK module rather than a client of its own. |
-| `--state` | active\|disabled |  | Default: "active". |
-| `--edition` | string |  | Default: "2026-08-24". |
+| `--type` | enum | yes | Generator implementation selected by a Target. This is configuration, not identity; several Targets may use the same generator. cli is the TypeScript CLI; go_cli is the native Go CLI, a distinct product that imports one exact paired Go SDK module rather than a client of its own. |
+| `--status` | active\|disabled |  | Default: "active". |
 | `--release-channel` | stable\|prerelease |  | Default: "stable". |
-| `--proposed-version` | string |  | Optional larger or prerelease SemVer for the next reviewed release. |
-| `--checks` | object |  | Required checks run against the complete combined package. Generated checks and customer commands share one reproducible workflow; repository_required names existing repository checks. Supplying checks replaces all settings. Omitted generated restores build, package, and public_entrypoint; omitted repository_required and customer restore empty lists. An empty object restores these defaults. An empty array clears the corresponding list. |
-| `--config` | json |  | Target-specific overrides merged over Project.config. GraphQL settings are rejected here and belong to the Definition. |
+| `--checks` | object |  | Required checks run against the code in the Draft. Generated checks and customer commands share one reproducible workflow; repository_required names existing repository checks. Supplying checks replaces all settings. Omitted generated restores build, package, and public_entrypoint; omitted repository_required and customer restore empty lists. An empty object restores these defaults. An empty array clears the corresponding list. |
+| `--config` | json |  | Target-specific overrides merged over Project.config. GraphQL settings are rejected here and belong to the Spec. |
 | `--deliveries` | json[] |  |  |
-| `--idempotency-key` | string |  | Identifies one logical write for 24 hours. The key is scoped to the authenticated account and operation; account-less generation uses a hashed network identity. Retrying the same method, path, query, If-Match header, and JSON body replays the original response. Reusing the key with changed intent returns 409. After expiry the key starts a new write. |
+| `--idempotency-key` | string |  | Identifies one logical write for 24 hours. The key is scoped to the authenticated organization and operation; generation without an organization uses a hashed network identity. Retrying the same method, path, query, If-Match header, and JSON body replays the original response. Reusing the key with changed intent returns 409. After expiry the key starts a new write. |
 
-### typeship targets retrieve <target_id>
+### typeship targets list
 
-GET /targets/{target_id}: Retrieve a Target
-
-### typeship targets delete <target_id>
-
-DELETE /targets/{target_id}: Delete an unused Target (destructive: needs --force)
+GET /targets: List Targets
 
 | flag | type | required | description |
 | --- | --- | --- | --- |
-| `--if-match` | string |  | ETag from a preceding response. The write applies only if the resource still has that version; otherwise it returns 412 precondition_failed without changes. Omit to write the current version. See https://typeship.dev/docs/typeship-api#conditional-writes. |
+| `--limit` | number |  | Maximum number of resources to return. Omit for 20; otherwise supply base-10 digits representing an integer from 1 to 100. Empty, malformed, or out-of-range values return 400 input_invalid. List query parameters must appear only once; repeated or unrecognized parameters return 400 query_param_invalid. Default: 20. |
+| `--cursor` | string |  | Opaque cursor from the preceding page's next_cursor. Valid only for the same organization, operation, filters, and ordering that issued it. Omit to start at the first page. Empty or malformed cursors, and cursors issued for different filters, return 400 cursor_invalid; start again from the first page. Repeated cursors return 400 query_param_invalid. The page limit may change between requests. |
+| `--project-id` | string |  | Only Targets in this Project. Accepts an ID or an exact name (resolved via projects_list). IDs come from projects_list. |
+
+### typeship targets get <target_id>
+
+GET /targets/{target_id}: Get a Target
 
 ### typeship targets update <target_id>
 
-PATCH /targets/{target_id}: Update a Target, its Deliveries, or its next reviewed version
+PATCH /targets/{target_id}: Update a Target
 
 | flag | type | required | description |
 | --- | --- | --- | --- |
 | `--name` | string |  |  |
-| `--state` | active\|disabled |  |  |
-| `--edition` | string |  |  |
+| `--status` | active\|disabled |  |  |
 | `--release-channel` | stable\|prerelease |  |  |
-| `--proposed-version` | string |  | Send only this field to select an exact SemVer, or null for automatic selection. The Target and Draft endpoints both support an optional If-Match precondition. |
-| `--checks` | object |  | Required checks run against the complete combined package. Generated checks and customer commands share one reproducible workflow; repository_required names existing repository checks. Supplying checks replaces all settings. Omitted generated restores build, package, and public_entrypoint; omitted repository_required and customer restore empty lists. An empty object restores these defaults. An empty array clears the corresponding list. |
-| `--config` | json |  | Replaces the complete stored override object. Send null or an empty object to resume Project inheritance. Effective values merge over Project.config; GraphQL settings belong to the Definition. |
-| `--deliveries` | json[] |  | Replaces the Delivery set; include each kind you want to keep. Retained kinds preserve their ID, creation time, and hosted URL. Each supplied Delivery replaces its configuration, so omitted optional settings reset to their defaults. Omit deliveries to keep the existing set, or send [] to remove all Deliveries. Removing and later recreating a kind allocates a new ID and, for hosted_mcp, a new URL. |
+| `--checks` | object |  | Required checks run against the code in the Draft. Generated checks and customer commands share one reproducible workflow; repository_required names existing repository checks. Supplying checks replaces all settings. Omitted generated restores build, package, and public_entrypoint; omitted repository_required and customer restore empty lists. An empty object restores these defaults. An empty array clears the corresponding list. |
+| `--config` | json |  | Replaces the complete stored override object. Send null or an empty object to resume Project inheritance. Effective values merge over Project.config; GraphQL settings belong to the Spec. |
 | `--if-match` | string |  | ETag from a preceding response. The write applies only if the resource still has that version; otherwise it returns 412 precondition_failed without changes. Omit to write the current version. See https://typeship.dev/docs/typeship-api#conditional-writes. |
 
-### typeship targets list-releases <target_id>
+### typeship targets delete <target_id>
 
-GET /targets/{target_id}/releases: List immutable releases for a Target
-
-| flag | type | required | description |
-| --- | --- | --- | --- |
-| `--limit` | number |  | Maximum number of resources to return. Omit for 20; otherwise supply base-10 digits representing an integer from 1 to 100. Empty, malformed, or out-of-range values return 400 invalid_request. List query parameters must appear only once; unrecognized parameters also return 400. Default: 20. |
-| `--cursor` | string |  | Opaque cursor from the preceding page's next_cursor. Valid only for the same account, operation, filters, and ordering that issued it. Omit to start at the first page. Empty, malformed, or repeated cursors return 400 invalid_request. The page limit may change between requests. |
-
-### typeship targets retrieve-draft <target_id>
-
-GET /targets/{target_id}/draft: Retrieve a Target's rolling Draft release
-
-### typeship targets update-draft <target_id>
-
-PATCH /targets/{target_id}/draft: Select an exact Draft version or return to automatic versioning
+DELETE /targets/{target_id}: Delete a Target (destructive: needs --force)
 
 | flag | type | required | description |
 | --- | --- | --- | --- |
-| `--body-version` | string | yes | Exact SemVer, or null to return to automatic selection. |
 | `--if-match` | string |  | ETag from a preceding response. The write applies only if the resource still has that version; otherwise it returns 412 precondition_failed without changes. Omit to write the current version. See https://typeship.dev/docs/typeship-api#conditional-writes. |
 
-### typeship targets adopt-release <target_id>
+### typeship targets adopt <target_id>
 
-POST /targets/{target_id}/adopt: Adopt a verified existing package as Current
+POST /targets/{target_id}/adopt: Adopt a package release
 
 | flag | type | required | description |
 | --- | --- | --- | --- |
-| `--body-version` | string | yes | Exact already-published package version to make Current. |
+| `--body-version` | string | yes | Exact already-published package version to make the latest release. |
 | `--tag` | string | yes | Immutable repository tag containing the matching package source. |
-| `--idempotency-key` | string |  | Identifies one logical write for 24 hours. The key is scoped to the authenticated account and operation; account-less generation uses a hashed network identity. Retrying the same method, path, query, If-Match header, and JSON body replays the original response. Reusing the key with changed intent returns 409. After expiry the key starts a new write. |
+| `--idempotency-key` | string |  | Identifies one logical write for 24 hours. The key is scoped to the authenticated organization and operation; generation without an organization uses a hashed network identity. Retrying the same method, path, query, If-Match header, and JSON body replays the original response. Reusing the key with changed intent returns 409. After expiry the key starts a new write. |
 
-### typeship targets retrieve-release <target_release_id>
+## deliveries
 
-GET /target-releases/{target_release_id}: Retrieve an immutable Target release
+### typeship deliveries create
 
-### typeship targets republish-release <target_release_id>
-
-POST /target-releases/{target_release_id}/republish: Retry publication of an exact Target release
+POST /deliveries: Create a Delivery
 
 | flag | type | required | description |
 | --- | --- | --- | --- |
-| `--idempotency-key` | string |  | Identifies one logical write for 24 hours. The key is scoped to the authenticated account and operation; account-less generation uses a hashed network identity. Retrying the same method, path, query, If-Match header, and JSON body replays the original response. Reusing the key with changed intent returns 409. After expiry the key starts a new write. |
+| `--idempotency-key` | string |  | Identifies one logical write for 24 hours. The key is scoped to the authenticated organization and operation; generation without an organization uses a hashed network identity. Retrying the same method, path, query, If-Match header, and JSON body replays the original response. Reusing the key with changed intent returns 409. After expiry the key starts a new write. |
 
-### typeship targets list-draft-files <target_id>
+### typeship deliveries list
 
-GET /targets/{target_id}/draft/files: List customized and conflicted files on a Draft
-
-| flag | type | required | description |
-| --- | --- | --- | --- |
-| `--filter` | enum |  | conflicted: conflicts only. customized: files that differ from the last accepted package. history: files affected by a default-branch history rewrite. Omit for conflicted and customized files. |
-| `--limit` | number |  | Maximum number of resources to return. Omit for 20; otherwise supply base-10 digits representing an integer from 1 to 100. Empty, malformed, or out-of-range values return 400 invalid_request. List query parameters must appear only once; unrecognized parameters also return 400. Default: 20. |
-| `--cursor` | string |  | Opaque cursor from the preceding page's next_cursor. Valid only for the same account, operation, filters, and ordering that issued it. Omit to start at the first page. Empty, malformed, or repeated cursors return 400 invalid_request. The page limit may change between requests. |
-
-### typeship targets retrieve-draft-file-content <target_id>
-
-GET /targets/{target_id}/draft/files/content: Read one side of a Draft file
+GET /deliveries: List Deliveries
 
 | flag | type | required | description |
 | --- | --- | --- | --- |
-| `--path` | string | yes | File path from listDraftFiles. |
-| `--side` | enum | yes | A side listed for the file. |
-| `--cursor` | string |  | next_cursor from the preceding chunk of the same path and side. |
+| `--limit` | number |  | Maximum number of resources to return. Omit for 20; otherwise supply base-10 digits representing an integer from 1 to 100. Empty, malformed, or out-of-range values return 400 input_invalid. List query parameters must appear only once; repeated or unrecognized parameters return 400 query_param_invalid. Default: 20. |
+| `--cursor` | string |  | Opaque cursor from the preceding page's next_cursor. Valid only for the same organization, operation, filters, and ordering that issued it. Omit to start at the first page. Empty or malformed cursors, and cursors issued for different filters, return 400 cursor_invalid; start again from the first page. Repeated cursors return 400 query_param_invalid. The page limit may change between requests. |
+| `--target-id` | string |  | Only Deliveries of this Target. Accepts an ID or an exact name (resolved via targets_list). IDs come from targets_list. |
 
-### typeship targets resolve-draft-conflicts <target_id>
+### typeship deliveries get <delivery_id>
 
-POST /targets/{target_id}/draft/conflicts/resolve: Resolve selected Draft conflicts
+GET /deliveries/{delivery_id}: Get a Delivery
 
-| flag | type | required | description |
-| --- | --- | --- | --- |
-| `--expected-head-revision` | string | yes | The Draft's head_revision. A newer Draft commit returns 409 stale_draft without saving. |
-| `--resolutions` | json[] | yes | Unique current conflict paths. Final file content must total at most 2 MiB. Decisions save together or not at all. |
-| `--dry-run` | boolean |  | Validate the decisions and return the planned files without saving. Default: false. |
+### typeship deliveries update <delivery_id>
 
-### typeship targets discard-draft-customizations <target_id>
-
-POST /targets/{target_id}/draft/customizations/discard: Discard selected Draft customizations
+PATCH /deliveries/{delivery_id}: Update a Delivery
 
 | flag | type | required | description |
 | --- | --- | --- | --- |
-| `--expected-head-revision` | string | yes | The Draft's head_revision. A newer Draft commit returns 409 stale_draft without committing. |
-| `--paths` | string[] | yes | Customized paths that are not conflicts, to replace with the generated files. A listed file that exists only on the Draft is deleted. |
-| `--dry-run` | boolean |  | Return the planned writes and deletions without committing. Default: false. |
+| `--repository` | object | yes |  |
+| `--if-match` | string |  | ETag from a preceding response. The write applies only if the resource still has that version; otherwise it returns 412 precondition_failed without changes. Omit to write the current version. See https://typeship.dev/docs/typeship-api#conditional-writes. |
 
-### typeship targets recover-draft-history <target_id>
+### typeship deliveries delete <delivery_id>
 
-POST /targets/{target_id}/draft/history/recover: Approve recovery from rewritten default-branch history
+DELETE /deliveries/{delivery_id}: Delete a Delivery (destructive: needs --force)
 
 | flag | type | required | description |
 | --- | --- | --- | --- |
-| `--expected-default-revision` | string | yes | The Draft's history_recovery.default_revision. |
-| `--expected-head-revision` | string | yes | The Draft's history_recovery.head_revision; null when the Draft branch is absent. |
-
-### typeship targets retrieve-delivery <delivery_id>
-
-GET /deliveries/{delivery_id}: Retrieve a Delivery
-
-### typeship targets retrieve-publication <publication_id>
-
-GET /publications/{publication_id}: Retrieve a Publication
+| `--if-match` | string |  | ETag from a preceding response. The write applies only if the resource still has that version; otherwise it returns 412 precondition_failed without changes. Omit to write the current version. See https://typeship.dev/docs/typeship-api#conditional-writes. |
 
 ## generations
 
-### typeship generations retrieve <generation_id>
+### typeship generations get <generation_id>
 
-GET /generations/{generation_id}: Retrieve a generation
+GET /generations/{generation_id}: Get a Generation
 
-### typeship generations retrieve-file <generation_id>
+### typeship generations list
 
-GET /generations/{generation_id}/file: Fetch one file from a generation
-
-| flag | type | required | description |
-| --- | --- | --- | --- |
-| `--path` | string | yes | Repo-relative path inside the generated package. |
-
-## definition-revisions
-
-### typeship definition-revisions list <definition_id>
-
-GET /definitions/{definition_id}/revisions: List Definition Revisions
+GET /generations: List Generations
 
 | flag | type | required | description |
 | --- | --- | --- | --- |
-| `--limit` | number |  | Maximum number of resources to return. Omit for 20; otherwise supply base-10 digits representing an integer from 1 to 100. Empty, malformed, or out-of-range values return 400 invalid_request. List query parameters must appear only once; unrecognized parameters also return 400. Default: 20. |
-| `--cursor` | string |  | Opaque cursor from the preceding page's next_cursor. Valid only for the same account, operation, filters, and ordering that issued it. Omit to start at the first page. Empty, malformed, or repeated cursors return 400 invalid_request. The page limit may change between requests. |
+| `--limit` | number |  | Maximum number of resources to return. Omit for 20; otherwise supply base-10 digits representing an integer from 1 to 100. Empty, malformed, or out-of-range values return 400 input_invalid. List query parameters must appear only once; repeated or unrecognized parameters return 400 query_param_invalid. Default: 20. |
+| `--cursor` | string |  | Opaque cursor from the preceding page's next_cursor. Valid only for the same organization, operation, filters, and ordering that issued it. Omit to start at the first page. Empty or malformed cursors, and cursors issued for different filters, return 400 cursor_invalid; start again from the first page. Repeated cursors return 400 query_param_invalid. The page limit may change between requests. |
+| `--project-id` | string |  | Only Generations in this Project. Accepts an ID or an exact name (resolved via projects_list). IDs come from projects_list. |
+| `--target-id` | string |  | Only Generations of this Target. Accepts an ID or an exact name (resolved via targets_list). IDs come from targets_list. |
+| `--status` | enum |  | Only Generations with this status. |
 
-### typeship definition-revisions retrieve <definition_revision_id>
+### typeship generations list-files <generation_id>
 
-GET /definition-revisions/{definition_revision_id}: Retrieve a Definition Revision
+GET /generations/{generation_id}/files: List a Generation's files
 
-### typeship definition-revisions retrieve-content <definition_revision_id>
+| flag | type | required | description |
+| --- | --- | --- | --- |
+| `--limit` | number |  | Maximum number of resources to return. Omit for 20; otherwise supply base-10 digits representing an integer from 1 to 100. Empty, malformed, or out-of-range values return 400 input_invalid. List query parameters must appear only once; repeated or unrecognized parameters return 400 query_param_invalid. Default: 20. |
+| `--cursor` | string |  | Opaque cursor from the preceding page's next_cursor. Valid only for the same organization, operation, filters, and ordering that issued it. Omit to start at the first page. Empty or malformed cursors, and cursors issued for different filters, return 400 cursor_invalid; start again from the first page. Repeated cursors return 400 query_param_invalid. The page limit may change between requests. |
 
-GET /definition-revisions/{definition_revision_id}/content: Retrieve a Definition Revision's canonical content
+## drafts
 
-### typeship definition-revisions retrieve-document-content <definition_revision_id> <document_id>
+### typeship drafts list
 
-GET /definition-revisions/{definition_revision_id}/documents/{document_id}/content: Retrieve one source document from a Definition Revision
+GET /drafts: List Drafts
 
-### typeship definition-revisions retrieve-document <definition_document_id>
+| flag | type | required | description |
+| --- | --- | --- | --- |
+| `--limit` | number |  | Maximum number of resources to return. Omit for 20; otherwise supply base-10 digits representing an integer from 1 to 100. Empty, malformed, or out-of-range values return 400 input_invalid. List query parameters must appear only once; repeated or unrecognized parameters return 400 query_param_invalid. Default: 20. |
+| `--cursor` | string |  | Opaque cursor from the preceding page's next_cursor. Valid only for the same organization, operation, filters, and ordering that issued it. Omit to start at the first page. Empty or malformed cursors, and cursors issued for different filters, return 400 cursor_invalid; start again from the first page. Repeated cursors return 400 query_param_invalid. The page limit may change between requests. |
+| `--target-id` | string |  | Only Drafts of this Target. Accepts an ID or an exact name (resolved via targets_list). IDs come from targets_list. |
+| `--status` | enum |  | Only Drafts with this status. |
 
-GET /definition-documents/{definition_document_id}: Retrieve a Definition Document
+### typeship drafts get <draft_id>
 
-## account
+GET /drafts/{draft_id}: Get a Draft
 
-### typeship account retrieve
+### typeship drafts update <draft_id>
 
-GET /me: The account behind the presented credentials
+PATCH /drafts/{draft_id}: Update a Draft
+
+| flag | type | required | description |
+| --- | --- | --- | --- |
+| `--version-next` | string | yes | Exact SemVer, or null to return to automatic selection. |
+| `--if-match` | string |  | ETag from a preceding response. The write applies only if the resource still has that version; otherwise it returns 412 precondition_failed without changes. Omit to write the current version. See https://typeship.dev/docs/typeship-api#conditional-writes. |
+
+### typeship drafts list-files <draft_id>
+
+GET /drafts/{draft_id}/files: List a Draft's files
+
+| flag | type | required | description |
+| --- | --- | --- | --- |
+| `--filter` | enum |  | conflicted: conflicts only. customized: files that differ from the last merged package. history: files affected by a default-branch history rewrite. Omit for conflicted and customized files. |
+| `--limit` | number |  | Maximum number of resources to return. Omit for 20; otherwise supply base-10 digits representing an integer from 1 to 100. Empty, malformed, or out-of-range values return 400 input_invalid. List query parameters must appear only once; repeated or unrecognized parameters return 400 query_param_invalid. Default: 20. |
+| `--cursor` | string |  | Opaque cursor from the preceding page's next_cursor. Valid only for the same organization, operation, filters, and ordering that issued it. Omit to start at the first page. Empty or malformed cursors, and cursors issued for different filters, return 400 cursor_invalid; start again from the first page. Repeated cursors return 400 query_param_invalid. The page limit may change between requests. |
+
+### typeship drafts resolve <draft_id>
+
+POST /drafts/{draft_id}/resolve: Resolve Draft conflicts
+
+| flag | type | required | description |
+| --- | --- | --- | --- |
+| `--expected-head-sha` | string | yes | The Draft's head_sha. A newer Draft commit returns 409 resource_changed without saving. |
+| `--resolutions` | json[] | yes | Unique current conflict or customized paths. Choose generated to discard a customization, including a Draft-only file. Final file content must total at most 2 MiB. Decisions apply together or not at all. |
+
+### typeship drafts recover <draft_id>
+
+POST /drafts/{draft_id}/recover: Recover a Draft's history
+
+| flag | type | required | description |
+| --- | --- | --- | --- |
+| `--expected-default-sha` | string | yes | The Draft's history_recovery.default_sha. |
+| `--expected-head-sha` | string | yes | The Draft's history_recovery.head_sha; null when the Draft branch is absent. |
+
+## releases
+
+### typeship releases list
+
+GET /releases: List Releases
+
+| flag | type | required | description |
+| --- | --- | --- | --- |
+| `--limit` | number |  | Maximum number of resources to return. Omit for 20; otherwise supply base-10 digits representing an integer from 1 to 100. Empty, malformed, or out-of-range values return 400 input_invalid. List query parameters must appear only once; repeated or unrecognized parameters return 400 query_param_invalid. Default: 20. |
+| `--cursor` | string |  | Opaque cursor from the preceding page's next_cursor. Valid only for the same organization, operation, filters, and ordering that issued it. Omit to start at the first page. Empty or malformed cursors, and cursors issued for different filters, return 400 cursor_invalid; start again from the first page. Repeated cursors return 400 query_param_invalid. The page limit may change between requests. |
+| `--target-id` | string |  | Only releases of this Target. Accepts an ID or an exact name (resolved via targets_list). IDs come from targets_list. |
+
+### typeship releases get <release_id>
+
+GET /releases/{release_id}: Get a Release
+
+### typeship releases retry <release_id>
+
+POST /releases/{release_id}/retry: Retry publishing a Release
+
+| flag | type | required | description |
+| --- | --- | --- | --- |
+| `--idempotency-key` | string |  | Identifies one logical write for 24 hours. The key is scoped to the authenticated organization and operation; generation without an organization uses a hashed network identity. Retrying the same method, path, query, If-Match header, and JSON body replays the original response. Reusing the key with changed intent returns 409. After expiry the key starts a new write. |
+
+## files
+
+### typeship files get <file_id>
+
+GET /files/{file_id}: Get a File
+
+| flag | type | required | description |
+| --- | --- | --- | --- |
+| `--cursor` | string |  | next_cursor from the preceding chunk of this file. |
+
+## packages
+
+### typeship packages generate
+
+POST /generate: Generate a package
+
+| flag | type | required | description |
+| --- | --- | --- | --- |
+| `--spec` | json | yes | A Spec for one-shot generation, provided as exactly one URL or inline entrypoint. |
+| `--target` | object | yes | One-shot generator descriptor; no persisted Target is created. |
+| `--package-name` | string |  | npm package or Python distribution override. Valid only for the TypeScript and Python SDK targets. |
+| `--module-path` | string |  | Go module path override for the generated artifact's own module. Valid only for the Go SDK and Go CLI Targets. Projects derive this from the Go destination repository by default. |
+| `--go-sdk` | object |  | The exact paired Go SDK a go_cli generation is built on. Required when target.type is go_cli and rejected otherwise. The descriptor is closed and immutable, because a CLI that pins a range or a branch pins nothing. |
+| `--config` | object |  | Everything Typeship needs beyond the Spec, in one object: generation customization (globals, retries, pagination, readme) and how the generated tooling behaves (cli, mcp, package, docs_url). Plain configuration. Typeship never requires vendor extensions inside the Spec itself. One-shot generation also accepts GraphQL settings here; stored projects keep those settings on their Spec. |
+| `--idempotency-key` | string |  | Identifies one logical write for 24 hours. The key is scoped to the authenticated organization and operation; generation without an organization uses a hashed network identity. Retrying the same method, path, query, If-Match header, and JSON body replays the original response. Reusing the key with changed intent returns 409. After expiry the key starts a new write. |
+
+### typeship packages download
+
+GET /generate/download: Download a generated package
+
+| flag | type | required | description |
+| --- | --- | --- | --- |
+| `--query-token` | string | yes | Private download token from download.url in the generation result. |
+
+## organization
+
+### typeship organization get
+
+GET /organization: Get the Organization
 
 ## api-keys
 
@@ -351,16 +372,17 @@ GET /api-keys: List API keys
 
 | flag | type | required | description |
 | --- | --- | --- | --- |
-| `--limit` | number |  | Maximum number of resources to return. Omit for 20; otherwise supply base-10 digits representing an integer from 1 to 100. Empty, malformed, or out-of-range values return 400 invalid_request. List query parameters must appear only once; unrecognized parameters also return 400. Default: 20. |
-| `--cursor` | string |  | Opaque cursor from the preceding page's next_cursor. Valid only for the same account, operation, filters, and ordering that issued it. Omit to start at the first page. Empty, malformed, or repeated cursors return 400 invalid_request. The page limit may change between requests. |
+| `--limit` | number |  | Maximum number of resources to return. Omit for 20; otherwise supply base-10 digits representing an integer from 1 to 100. Empty, malformed, or out-of-range values return 400 input_invalid. List query parameters must appear only once; repeated or unrecognized parameters return 400 query_param_invalid. Default: 20. |
+| `--cursor` | string |  | Opaque cursor from the preceding page's next_cursor. Valid only for the same organization, operation, filters, and ordering that issued it. Omit to start at the first page. Empty or malformed cursors, and cursors issued for different filters, return 400 cursor_invalid; start again from the first page. Repeated cursors return 400 query_param_invalid. The page limit may change between requests. |
+| `--status` | active\|revoked |  | Only keys with this status. |
 
-### typeship api-keys retrieve <api_key_id>
+### typeship api-keys get <api_key_id>
 
-GET /api-keys/{api_key_id}: Retrieve an API key
+GET /api-keys/{api_key_id}: Get an API key
 
 ### typeship api-keys revoke <api_key_id>
 
-DELETE /api-keys/{api_key_id}: Revoke an API key (destructive: needs --force)
+POST /api-keys/{api_key_id}/revoke: Revoke an API key
 
 | flag | type | required | description |
 | --- | --- | --- | --- |

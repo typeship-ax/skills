@@ -15,7 +15,7 @@ allowed-tools: Bash(typeship *), Bash(claude mcp *), Bash(codex mcp *), Read, Wr
 | --- | --- |
 | `https://typeship.dev/mcp` | The default. A person signs in with OAuth, choosing one organization and approving `typeship:read`, `typeship:generate`, and `typeship:write`. Automation sends `Authorization: Bearer ak_...` instead. |
 | `https://typeship.dev/mcp/readonly` | The same tools without writes, even when the credential allows them. |
-| `https://typeship.dev/mcp/public` | No sign-in. Exactly six tools: `search_docs`, `read_docs`, `query_docs`, `submit_docs_feedback`, `generate_run` (first 25 operations), and `generate_download_package`. |
+| `https://typeship.dev/mcp/public` | No sign-in. Exactly six tools: `search_docs`, `read_docs`, `query_docs`, `submit_docs_feedback`, `packages_generate` (first 25 operations), and `packages_download`. |
 
 An invalid credential returns HTTP 401. A missing OAuth capability returns HTTP 403 with a challenge to approve it.
 
@@ -35,7 +35,7 @@ To configure a client by hand:
 - **Claude Code:** `claude mcp add --transport http typeship https://typeship.dev/mcp` signs in. For a key, add `--header 'Authorization: Bearer ${TYPESHIP_TOKEN}'`; the single quotes keep the variable unexpanded.
 - **Codex:** `codex mcp add typeship --url https://typeship.dev/mcp && codex mcp login typeship`. For a key, use `--bearer-token-env-var TYPESHIP_TOKEN` instead of `login`.
 - **Cursor:** merge `{"mcpServers":{"typeship":{"url":"https://typeship.dev/mcp"}}}` into `.cursor/mcp.json`, then enable the server in Cursor's MCP settings.
-- **JSON config clients** (`.mcp.json`, Windsurf, Gemini CLI): `{"mcpServers":{"typeship":{"type":"http","url":"https://typeship.dev/mcp"}}}`. VS Code uses `servers` in `.vscode/mcp.json`, and OpenCode uses `mcp` with `"type":"remote"`. For a key, add `"headers":{"Authorization":"Bearer ${TYPESHIP_TOKEN}"}`.
+- **JSON config clients:** `.mcp.json` uses `{"mcpServers":{"typeship":{"type":"http","url":"https://typeship.dev/mcp"}}}`. VS Code uses `servers` in `.vscode/mcp.json`, Windsurf uses `serverUrl`, Gemini CLI uses `httpUrl`, and OpenCode uses `mcp` with `"type":"remote"`. For a key, add `"headers":{"Authorization":"Bearer <reference>"}` in the client's own syntax: `${TYPESHIP_TOKEN}` in `.mcp.json`, `${env:TYPESHIP_TOKEN}` in Cursor, VS Code, and Windsurf, and `{env:TYPESHIP_TOKEN}` in OpenCode. Gemini CLI and Zed do not expand variables in headers; let them sign in instead.
 - **Claude Desktop and claude.ai:** add `https://typeship.dev/mcp` as a custom connector. Claude Desktop's config file launches only local servers; for a generated one, run `<bin> mcp --claude-desktop`.
 
 Never write a literal key into a client config. Reference the environment variable.
@@ -46,9 +46,9 @@ Never write a literal key into a client config. Reference the environment variab
 
 ## Save a generated package
 
-`generate_run` returns a `download` link to a ZIP with every generated file.
+`packages_generate` returns a `download` link to a ZIP with every generated file.
 
-1. Download `download.url` before `download.expires_at`. On a hosted connection, use the agent's download or terminal tool. With typeship's local MCP server (`@typeship-ax/mcp`), call `execute` with `operation: "generate_download_package"` and the URL's `token`; it saves the ZIP and returns `saved_to`.
+1. Download `download.url` before `download.expires_at`. On a hosted connection, use the agent's download or terminal tool. With typeship's local MCP server (`@typeship-ax/mcp`), call `execute` with `operation: "packages_download"` and the URL's `token`; it saves the ZIP and returns `saved_to`.
 2. Check the ZIP against `download.sha256` and extract it into an empty directory.
 3. Read the package's README to build and use it.
 

@@ -1,6 +1,6 @@
 ---
 name: typeship-ci
-description: Run typeship in a pipeline - trigger a linked Project's normal pull requests, or generate a package into the checkout the job commits. Use when the user wants typeship in GitHub Actions or another CI system.
+description: Run typeship in a pipeline - trigger a Project's normal pull requests, or generate a package into the checkout the job commits. Use when the user wants typeship in GitHub Actions or another CI system.
 license: MIT
 allowed-tools: Bash(typeship *), Read, Write
 ---
@@ -22,7 +22,7 @@ Create an API key in the console at https://typeship.dev/console/keys and store 
     TYPESHIP_TOKEN: ${{ secrets.TYPESHIP_TOKEN }}
 ```
 
-This runs the same pipeline as a spec change. It records the Definition Revision, then opens or updates one pull request per changed Target, with a compatibility report and version check. The command waits for every Target and reports each result. A Target whose repository already matches reports `pr_status: no_changes` and gets no commit or pull request.
+This runs the same pipeline as a spec change. It records the Spec Revision, then opens or updates one pull request per changed Target, with a compatibility report and version check. The command waits for every Target and reports each result. A Target whose repository already matches reports `pr_status: no_changes` and gets no commit or pull request.
 
 Do not write this command's output into the checkout. The pull requests already deliver the packages, and a second copy bypasses their review.
 
@@ -31,9 +31,9 @@ Do not write this command's output into the checkout. The pull requests already 
 When the job itself owns the commit, generate one package with `--out`:
 
 ```bash
-typeship generate run \
-  --definition '{"url":"<spec-url>"}' \
-  --target '{"generator":"typescript-sdk"}' \
+typeship packages generate \
+  --spec '{"url":"<spec-url>"}' \
+  --target '{"type":"typescript_sdk"}' \
   --out packages/typescript
 ```
 
