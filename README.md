@@ -13,7 +13,7 @@ npx skills add typeship-ax/skills
 As a plugin, which also connects typeship's MCP server and signs you in on first use:
 
 - Claude Code: `/plugin marketplace add typeship-ax/skills`, then `/plugin install typeship@typeship-skills`
-- Codex: `codex plugin marketplace add typeship-ax/skills`
+- Codex: `codex plugin marketplace add typeship-ax/skills`, then run `/plugins` and install `typeship`
 
 The skills run the `typeship` CLI. Install it with `npm install -g @typeship-ax/cli`, or run it without installing through `npx -y @typeship-ax/cli@latest`.
 

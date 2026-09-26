@@ -1,0 +1,12 @@
+{
+  "name": "typeship-skills",
+  "interface": { "displayName": "typeship" },
+  "plugins": [
+    {
+      "name": "typeship",
+      "source": { "source": "local", "path": "./" },
+      "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" },
+      "category": "Productivity"
+    }
+  ]
+}
