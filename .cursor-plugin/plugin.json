@@ -1,8 +1,8 @@
 {
   "name": "typeship",
   "version": "0.1.0",
-  "description": "Generate a typed SDK, CLI, and MCP server from any OpenAPI or GraphQL spec with typeship, and keep them current.",
-  "author": { "name": "typeship", "url": "https://typeship.dev" },
+  "description": "Generate a typed SDK, CLI, and MCP server from any OpenAPI or GraphQL spec with Typeship, and keep them current.",
+  "author": { "name": "Typeship", "url": "https://typeship.dev" },
   "homepage": "https://typeship.dev",
   "repository": "https://github.com/typeship-ax/skills",
   "license": "MIT",
