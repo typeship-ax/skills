@@ -1,15 +1,15 @@
-# The typeship CLI agent contract
+# The Typeship CLI agent contract
 
 Source of truth: `typeship agent-guide --format json` (this file mirrors it).
 
 - Output: JSON on stdout. `--all` streams every page of a paginated list as NDJSON. Streaming operations emit one JSON line per event.
-- Errors: one envelope on stderr, `{status: "error"|"action_required", issues: [{code, message}], docs_url?, next_steps: [], detail?}`. Codes: NO_AUTH, AUTH_INVALID, PLAN_LIMIT, NOT_FOUND, INVALID_REQUEST, SPEC_INVALID, RATE_LIMITED, SERVER_ERROR, NETWORK_ERROR, VALIDATION_FAILED, TTY_REQUIRED, CONFIRMATION_REQUIRED, INVALID_USAGE, UNKNOWN_COMMAND, UNKNOWN_FLAG, MISSING_ARGUMENT, COMMAND_FAILED.
+- Errors: one envelope on stderr, `{status: "error"|"action_required", issues: [{code, message}], docs_url?, next_steps: [], retryable?, detail?}`. A failed request puts the API's message in `message`, its suggested actions first in `next_steps`, and status, request ID, and body in `detail`. Codes: NO_AUTH, AUTH_INVALID, PLAN_LIMIT, NOT_FOUND, INVALID_REQUEST, SPEC_INVALID, RATE_LIMITED, SERVER_ERROR, NETWORK_ERROR, VALIDATION_FAILED, TTY_REQUIRED, CONFIRMATION_REQUIRED, INVALID_USAGE, UNKNOWN_COMMAND, UNKNOWN_FLAG, MISSING_ARGUMENT, COMMAND_FAILED.
 - Exit codes: 0 ok; 1 the request or command failed; 2 usage (wrong flags, missing arguments, a confirmation was required).
 - Agent mode: `--mode agent`, `TYPESHIP_MODE=agent`, or no terminal on stdin and stdout. No prompts, no browsers (`docs --web` prints the URL), stops are `action_required`.
 - Destructive: every DELETE needs `--force` (or `--yes`, `TYPESHIP_YES=1`).
 - Flags: positional path arguments first, then `--flags`. JSON-typed flags take JSON; repeat a flag for arrays; `--data '<json>'` merges under field flags. `--out <dir>` writes file-shaped responses to disk.
-- Auth: `TYPESHIP_TOKEN` in the environment > `--token` > `typeship login` credentials file. `POST /generate` (`typeship generate run`) needs no key.
+- Auth: `TYPESHIP_TOKEN` in the environment > `--token` > `typeship login` credentials file. `POST /generate` (`typeship packages generate`) needs no key.
 - Base URL: `--base-url` > `TYPESHIP_BASE_URL` > `typeship config` > `https://typeship.dev/api/v1`.
-- Discovery: `typeship --help`, `typeship <resource> <command> --help`, `typeship help --json`, `typeship docs search <term>`; docs index https://typeship.dev/llms.txt.
+- Discovery: `typeship help --json` indexes resources and command names; `typeship help <resource> --json` lists a resource's commands; `typeship help <resource> <command> --json` gives one command's flags; `typeship help --json --all` prints every command with every flag. Also `typeship --help`, `typeship <resource> <command> --help`, `typeship docs search <term>`; docs index https://typeship.dev/llms.txt.
 - Authentication: check `typeship auth check --format json`; use an existing environment or stored key, or run `typeship login --no-browser` when authenticated work needs one. `typeship doctor` diagnoses setup. `typeship init --all` also installs skills, configures detected MCP clients, and writes repository instructions; use it only when that setup is requested.
 - MCP: `typeship mcp install --all` registers https://typeship.dev/mcp with every agent client found (auth env var as a reference). Cursor is included when detected; use `--cursor` to configure it explicitly.
